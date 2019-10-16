@@ -4,7 +4,9 @@ import re
 import datetime
 from time import strptime
 
-def get(config):
+# Pass get the config, and also a list of imported staff IDs
+
+def get(config, added_staff):
 
     # Set headers for CSV data:
     csv_fieldnames=[
