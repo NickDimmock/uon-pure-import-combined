@@ -97,7 +97,7 @@ def get(config):
                 "fte": d["FTE"][0:4]
             }
 
-    # Get the PhD data:
+    # Get the PhD data add to data object:
     phd_data = get_phd_data.get(config, added_staff)
     py_data["phd_persons"] = phd_data["phd_persons"]
 
