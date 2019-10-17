@@ -29,6 +29,8 @@ def get(config, added_staff):
     # Read in the CSV data:
     with open(config.phd_source, "r") as f:
         reader = csv.DictReader(f, fieldnames = csv_fieldnames)
+        # Skip headers:
+        next(reader, None)
         data = list(reader)
 
     # Create starting data, including root UON info from config:
@@ -42,21 +44,36 @@ def get(config, added_staff):
     # Take the data line by line:
     for d in data:
 
+        resid = d["ResId"].strip()
+
+        # Create 'johndoe' style name to check against staff records:
+        check_name = d['forenames'].strip().lower() + d['surname'].strip().lower()
+
         # Filter out staff based on alphanumeric ResId values (e.g. jsmith):
         # Strip the ResId, as it sometimes has a leading space...
         staff_pattern=re.compile(r"\D")
 
-        if staff_pattern.search(d["ResId"].strip()):
-            problems.append({
-                "ResId": d['ResId'],
-                "studentid": d["student_id"],
-                "forenames": d["forenames"],
-                "surname": d["surname"],
-                "email": d["email"],
-                "problem": "ResId doesn't match ARMS pattern - may be staff."
-            })
-            # Skip to next record:
-            continue
+        if staff_pattern.search(resid):
+            if check_name in added_staff:
+                problems.append({
+                    "ResId": d['ResId'],
+                    "studentid": d["student_id"],
+                    "forenames": d["forenames"],
+                    "surname": d["surname"],
+                    "email": d["email"],
+                    "problem": "ResId doesn't match ARMS pattern, and already found in staff data. Record excluded."
+                })
+                # Skip to next record:
+                continue
+            else:
+                problems.append({
+                    "ResId": d['ResId'],
+                    "studentid": d["student_id"],
+                    "forenames": d["forenames"],
+                    "surname": d["surname"],
+                    "email": d["email"],
+                    "problem": "ResId doesn't match ARMS pattern, but not fond in staff data. Included, but may need checking."
+                })
         
         # Catch records with no start date included:
         if not d["start_date"]:
@@ -73,6 +90,7 @@ def get(config, added_staff):
 
         # If we get this far, we've probably got a student.
         # Flip the start date to Pure format:
+        print(resid)
         startdate_obj = datetime.datetime.strptime(d["start_date"], "%d/%m/%Y")
         startdate = startdate_obj.strftime("%Y-%m-%d")
 
