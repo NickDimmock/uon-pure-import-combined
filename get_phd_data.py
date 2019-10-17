@@ -74,7 +74,16 @@ def get(config, added_staff):
                     "email": d["email"],
                     "problem": "ResId doesn't match ARMS pattern, but not found in staff data. Included, but may need checking."
                 })
-        
+        elif check_name in added_staff:
+            # Do a basic name check even if there's no staff ID:
+            problems.append({
+                    "ResId": d['ResId'],
+                    "studentid": d["student_id"],
+                    "forenames": d["forenames"],
+                    "surname": d["surname"],
+                    "email": d["email"],
+                    "problem": "Student name matches already added staff name. Added to data, but check for duplication in Pure."
+                })
         # Catch records with no start date included:
         if not d["start_date"]:
            problems.append({
@@ -90,7 +99,6 @@ def get(config, added_staff):
 
         # If we get this far, we've probably got a student.
         # Flip the start date to Pure format:
-        print(resid)
         startdate_obj = datetime.datetime.strptime(d["start_date"], "%d/%m/%Y")
         startdate = startdate_obj.strftime("%Y-%m-%d")
 
