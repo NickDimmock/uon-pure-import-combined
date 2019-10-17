@@ -6,9 +6,6 @@ import datetime
 
 def get(config):
 
-    # Get the PhD data first, so we can merge it in later:
-    phd_data = get_phd_data.get(config=config)
-
     # Read in the staff and org CSV data:
     with open(config.staff_source, "r") as f:
         reader = csv.DictReader(f)
@@ -19,8 +16,12 @@ def get(config):
         "areas": config.uon_data,
         "depts": {},
         "persons": {},
-        "phd_persons": phd_data["phd_persons"]
+        "phd_persons": {}
     }
+
+    # List of added staff, to be compared against PhD records later.
+    # The only way we can currently do this is by name.
+    added_staff = []
 
     # Take the data line by line:
     for d in data:
@@ -52,6 +53,13 @@ def get(config):
 
         # Only process if data is wanted:
         if process_staff:
+            
+            # Get a full name to check against PhDs later
+            # Strip trailing spaces and lowercase for consistency
+            # End result will be something like 'johndoe'
+            # Data suggests this is the best method currently available
+            check_name = d['FAMILIAR_NAME'].strip() + d['SURNAME'].strip()
+            added_staff.append(check_name.lower())
 
             # If we get here, we want to add the dept and area codes:
             if d["AREA CODE"] not in py_data["areas"]:
@@ -94,6 +102,10 @@ def get(config):
                 "dept": d["DEPT_NAME"].strip(),
                 "fte": d["FTE"][0:4]
             }
+
+    # Get the PhD data add to data object:
+    phd_data = get_phd_data.get(config, added_staff)
+    py_data["phd_persons"] = phd_data["phd_persons"]
 
     # Grab the date:
     today = datetime.datetime.today().strftime('%Y-%m-%d')
