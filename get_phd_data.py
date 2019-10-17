@@ -72,7 +72,7 @@ def get(config, added_staff):
                     "forenames": d["forenames"],
                     "surname": d["surname"],
                     "email": d["email"],
-                    "problem": "ResId doesn't match ARMS pattern, but not fond in staff data. Included, but may need checking."
+                    "problem": "ResId doesn't match ARMS pattern, but not found in staff data. Included, but may need checking."
                 })
         
         # Catch records with no start date included:
