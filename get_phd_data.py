@@ -43,28 +43,38 @@ def get(config, added_staff):
 
     # Take the data line by line:
     for d in data:
-
         resid = d["ResId"].strip()
 
-        # Create 'johndoe' style name to check against staff records:
-        check_name = d['forenames'].strip().lower() + d['surname'].strip().lower()
+        # Filter out name-based staff logins:
+        if not resid.isdigit():
+            problems.append({
+                    "ResId": d['ResId'],
+                    "studentid": d["student_id"],
+                    "forenames": d["forenames"],
+                    "surname": d["surname"],
+                    "email": d["email"],
+                    "problem": "Unusable name-based resid - excluded."
+                })
+            continue
 
-        # Filter out staff based on alphanumeric ResId values (e.g. jsmith):
-        # Strip the ResId, as it sometimes has a leading space...
-        staff_pattern=re.compile(r"\D")
+        # Pad out the resid to 8 digits (for PhDs with staff IDs):
+        padded_id = resid.rjust(8, "0")
 
-        if staff_pattern.search(resid):
-            if check_name in added_staff:
+        # Staff ids will be under 8 digits and have a leading 0 in the padded version:
+        if len(resid) < 8 and padded_id[0] == "0":
+            # Check if already added during staff phase:
+            if resid in added_staff:
                 problems.append({
                     "ResId": d['ResId'],
                     "studentid": d["student_id"],
                     "forenames": d["forenames"],
                     "surname": d["surname"],
                     "email": d["email"],
-                    "problem": "ResId doesn't match ARMS pattern, and already found in staff data. Record excluded."
+                    "problem": "Staff ResId already found in staff data. Record excluded."
                 })
                 # Skip to next record:
                 continue
+            # If not already added, just note that a staff ID has been used:
             else:
                 problems.append({
                     "ResId": d['ResId'],
@@ -72,18 +82,9 @@ def get(config, added_staff):
                     "forenames": d["forenames"],
                     "surname": d["surname"],
                     "email": d["email"],
-                    "problem": "ResId doesn't match ARMS pattern, but not found in staff data. Included, but may need checking."
+                    "problem": "Staff ResId, but not found in staff import data. Included, but may need checking."
                 })
-        elif check_name in added_staff:
-            # Do a basic name check even if there's no staff ID:
-            problems.append({
-                    "ResId": d['ResId'],
-                    "studentid": d["student_id"],
-                    "forenames": d["forenames"],
-                    "surname": d["surname"],
-                    "email": d["email"],
-                    "problem": "Student name matches already added staff name. Added to data, but check for duplication in Pure."
-                })
+
         # Catch records with no start date included:
         if not d["start_date"]:
            problems.append({

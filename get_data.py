@@ -19,8 +19,7 @@ def get(config):
         "phd_persons": {}
     }
 
-    # List of added staff, to be compared against PhD records later.
-    # The only way we can currently do this is by name.
+    # List of added staff resid values, to be compared against PhD records later.
     added_staff = []
 
     # Take the data line by line:
@@ -54,12 +53,8 @@ def get(config):
         # Only process if data is wanted:
         if process_staff:
             
-            # Get a full name to check against PhDs later
-            # Strip trailing spaces and lowercase for consistency
-            # End result will be something like 'johndoe'
-            # Data suggests this is the best method currently available
-            check_name = d['FAMILIAR_NAME'].strip() + d['SURNAME'].strip()
-            added_staff.append(check_name.lower())
+            # Append ResID to our list of added records:
+            added_staff.append(d['ResID'])
 
             # If we get here, we want to add the dept and area codes:
             if d["AREA CODE"] not in py_data["areas"]:

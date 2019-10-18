@@ -15,7 +15,7 @@ def create(config, data):
         user = ET.SubElement(users, "user")
         user.set("id", f"user-{id}")
 
-        # We need a padded 8-digit version of our ID for the username value:
+        # We need a padded 8-digit version of our ID for the username value
         padded_id = id.rjust(8, "0")
 
         username = ET.SubElement(user, "userName")
@@ -30,7 +30,7 @@ def create(config, data):
         name_last = ET.SubElement(name, "v3:lastname")
         name_last.text = obj["surname"]
     
-    # Same process for PhD persons:
+    # Almost the same process for PhD persons
     for id, obj in data['phd_persons'].items():
         user = ET.SubElement(users, "user")
         user.set("id", f"user-{id}")
