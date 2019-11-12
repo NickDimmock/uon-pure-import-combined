@@ -44,11 +44,13 @@ def get(config, added_staff):
     # Take the data line by line:
     for d in data:
         resid = d["ResId"].strip()
+        # Remove leading zeros at this stage:
+        resid = re.sub(r"^0*","",resid)
 
         # Filter out name-based staff logins:
         if not resid.isdigit():
             problems.append({
-                    "ResId": d['ResId'],
+                    "ResId": resid,
                     "studentid": d["student_id"],
                     "forenames": d["forenames"],
                     "surname": d["surname"],
@@ -65,7 +67,7 @@ def get(config, added_staff):
             # Check if already added during staff phase:
             if resid in added_staff:
                 problems.append({
-                    "ResId": d['ResId'],
+                    "ResId": resid,
                     "studentid": d["student_id"],
                     "forenames": d["forenames"],
                     "surname": d["surname"],
@@ -77,7 +79,7 @@ def get(config, added_staff):
             # If not already added, just note that a staff ID has been used:
             else:
                 problems.append({
-                    "ResId": d['ResId'],
+                    "ResId": resid,
                     "studentid": d["student_id"],
                     "forenames": d["forenames"],
                     "surname": d["surname"],
@@ -88,7 +90,7 @@ def get(config, added_staff):
         # Catch records with no start date included:
         if not d["start_date"]:
            problems.append({
-                "ResId": d['ResId'],
+                "ResId": resid,
                 "studentid": d["student_id"],
                 "forenames": d["forenames"],
                 "surname": d["surname"],
@@ -105,7 +107,8 @@ def get(config, added_staff):
 
         # Build the person record
         # Stripping all fields just in case, based on previous data:
-        py_data["phd_persons"][d["ResId"].strip()] = {
+        #py_data["phd_persons"][d["ResId"].strip()] = {
+        py_data["phd_persons"][resid] = {
             "title": d["title"].strip(),
             "first_name": d["forenames"].strip(),
             "surname": d["surname"].strip(),
