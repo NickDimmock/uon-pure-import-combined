@@ -5,25 +5,16 @@ phd_source = "data/phd-data.csv"
 # master output folder:
 output_folder = "out"
 
-# archive folder:
-archive_folder = "out/archived"
-
 # output filenames:
-persons_xml = "persons"
-users_xml = "users"
-org_xml = "org"
+persons_xml = "persons.xml"
+users_xml = "users.xml"
+org_xml = "org.xml"
 
 # Filename for PhD problems CSV:
-phd_problem_file = "phd_problems"
-
-# Only needed to support NECTAR imports:
-# email_lookup_json = "out/email_lookup.json"
-
-# Reference org list file:
-org_list_json = "org_list"
+phd_problem_file = "phd_problems.csv"
 
 # Reference master data file:
-master_json = "master_data"
+master_json = "master_data.json"
 
 org_namespaces = {
     "xmlns": "v1.organisation-sync.pure.atira.dk",
