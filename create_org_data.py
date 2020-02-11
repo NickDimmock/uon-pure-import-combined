@@ -16,7 +16,7 @@ def create(data):
                 "type": obj["type"],
                 "name": {"v3:text": obj["name"]},
                 "startDate": obj["start_date"],
-                "visibility": "public"
+                "visibility": "Public"
             }
         if "parent" in obj:
             org["parentOrganisationId"] = obj["parent"]

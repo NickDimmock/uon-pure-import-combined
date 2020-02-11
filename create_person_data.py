@@ -8,21 +8,21 @@ def create(person_data):
             "@id": id,
             "name": {
                 "v3:firstname": obj["first_name"],
-                "v3.lastname": obj["surname"]
+                "v3:lastname": obj["surname"]
             },
             "names": {
                 "classifiedName": {
                     "@id": f"knownas-{id}",
                     "name": {
                         "v3:firstname": obj["known_as_first"],
-                        "v3.lastname": obj["known_as_last"]
+                        "v3:lastname": obj["known_as_last"]
                     },
                     "typeClassification": "knownas"
                 }
             },
             "titles": {
                 "title": {
-                    "@id": f"title={id}",
+                    "@id": f"title-{id}",
                     "typeClassification": "designation",
                     "value": {
                         "v3:text": {
@@ -41,7 +41,8 @@ def create(person_data):
                     "emails": {
                         "v3:classifiedEmail": {
                             "@id": f"{id}-{obj['dept_code']}-{obj['email']}",
-                            "v3:classificaiton": "email"
+                            "v3:classification": "email",
+                            "v3:value": obj['email']
                         }
                     },
                     "primaryAssociation": "true",
@@ -59,7 +60,7 @@ def create(person_data):
                 }
             },
             "user": {
-                "@id": f"user={id}"
+                "@id": f"user-{id}"
             },
             "personIds": {
                 "v3:id": {
@@ -95,11 +96,11 @@ def create(person_data):
             "@id": id,
             "name": {
                 "v3:firstname": obj["first_name"],
-                "v3.lastname": obj["surname"]
+                "v3:lastname": obj["surname"]
             },
             "titles": {
                 "title": {
-                    "@id": f"title={id}",
+                    "@id": f"title-{id}",
                     "typeClassification": "designation",
                     "value": {
                         "v3:text": {
@@ -117,7 +118,7 @@ def create(person_data):
                     "emails": {
                         "v3:classifiedEmail": {
                             "@id": f"{id}-{obj['code']}-{obj['email']}",
-                            "v3:classificaiton": "email",
+                            "v3:classification": "email",
                             "v3:value": obj["email"]
                         }
                     },
@@ -131,15 +132,7 @@ def create(person_data):
                     },
                     "programme": obj['description']
                 }
-            },
-            "employmentType": "phd",
-            "organisation": {
-                "v3:source_id": obj['code']
-            },
-            "period": {
-                "v3:startDate": obj['startdate']
-            },
-            "programme": obj['description']
+            }
         }
         persons.append(new_phd)
 

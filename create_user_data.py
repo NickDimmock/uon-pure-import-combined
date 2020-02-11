@@ -10,7 +10,7 @@ def create(data):
             "email": obj["email"],
             "name": {
                 "v3:firstname": obj["first_name"],
-                "v3.lastname": obj["surname"]
+                "v3:lastname": obj["surname"]
             }
         }
         users.append(user)

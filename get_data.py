@@ -75,13 +75,9 @@ def get(config):
                 }
             
             # Convert date, using first ten chars (omit time):
-            #print(f"Converting {d['START_DATE'][0:10]}")
             uni_start_date = convert_date.convert(d['START_DATE'][0:10], config.start_date)
-            #print(f"Converting end date {d['END_DATE'][0:10]}...")
             uni_end_date = convert_date.convert(d['END_DATE'][0:10], config.end_date)
-            #print(f"Converting div start date {d['POSITION_DATE_FROM'][0:10]}...")
             div_start_date = convert_date.convert(d['POSITION_DATE_FROM'][0:10], config.start_date)
-            #print(f"Converting div end date {d['POSITION_DATE_TO'][0:10]}...")
             div_end_date = convert_date.convert(d['POSITION_DATE_TO'][0:10], config.end_date)
 
             # FTE in HR data uses many decimal places, here we trim it to two.
