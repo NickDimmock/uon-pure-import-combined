@@ -31,7 +31,9 @@ users_namespaces = {
     "xmlns:v3": "v3.commons.pure.atira.dk"
 }
 
+# Default dates
 start_date = "2005-09-01"
+end_date = "2099-12-31"
 
 uon_id = "UON"
 

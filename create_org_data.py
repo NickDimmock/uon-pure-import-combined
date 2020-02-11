@@ -11,14 +11,16 @@ def create(data):
     }
     orgs = []
     for id, obj in data.items():
-        orgs.append(
-            {
+        org = {
                 "organisationId": id,
                 "type": obj["type"],
                 "name": {"v3:text": obj["name"]},
                 "startDate": obj["start_date"],
+                "visibility": "public"
             }
-        )
+        if "parent" in obj:
+            org["parentOrganisationId"] = obj["parent"]
+        orgs.append(org)
 
     org_data["organisations"]["organisation"] = orgs
 
