@@ -8,7 +8,7 @@ import convert_date
 #   * Create the initial py_data object
 #   * Populate it with default values from the config file
 #   * Create the areas and depts lists
-#   * Create the academic staff list
+#   * Create the research active staff list
 
 def get(config):
 
