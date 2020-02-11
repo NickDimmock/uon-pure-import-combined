@@ -1,5 +1,7 @@
 # uon-pure-imports-combined
 
+This version of the code uses the xmltodict library.
+
 ## Setup for PhD person & user records
 
 Some of these settings may already be active as part of the existing staff sync.
