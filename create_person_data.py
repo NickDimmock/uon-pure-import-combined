@@ -35,6 +35,7 @@ def create(person_data):
             },
             "gender": "unknown",
             "employeeStartDate": obj["uni_start_date"],
+            "systemLeavingDate": obj["uni_end_date"],
             "organisationAssociations": {
                 "staffOrganisationAssociation": {
                     "@id": f"{id}-{obj['dept_code']}-{obj['div_start_date']}",
@@ -50,7 +51,8 @@ def create(person_data):
                         "v3:source_id": obj["dept_code"]
                     },
                     "period": {
-                        "v3:startDate": obj["div_start_date"]
+                        "v3:startDate": obj["div_start_date"],
+                        "v3:endDate": obj["div_end_date"]
                     },
                     "staffType": "academic",
                     "jobDescription": {
