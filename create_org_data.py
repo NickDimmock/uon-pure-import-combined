@@ -1,6 +1,5 @@
 import config
 
-
 def create(data):
     org_data = {
         "organisations": {

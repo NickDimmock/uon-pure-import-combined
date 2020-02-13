@@ -29,7 +29,6 @@ with open(f"{config.output_folder}/{config.persons_xml}", "w", newline="", encod
     orgfile.write(xmltodict.unparse(person_data, pretty=True))
 
 # Create user data:
-
 user_data = create_user_data.create(py_data)
 with open(f"{config.output_folder}/{config.users_xml}", "w", newline="") as orgfile:
     orgfile.write(xmltodict.unparse(user_data, pretty=True))

@@ -74,7 +74,9 @@ def create(person_data):
         }
         # Now add phd_staff data where required:
         if id in person_data["phd_staff"].keys():
-            # Bingo!
+            # A match here means the current person is also in the PHD data set.
+            # So we can just add this as an org association on their staff record,
+            # rather than creating a separate PHD person record.
             phd_code = person_data["phd_staff"][id]["code"]
             phd_start = person_data["phd_staff"][id]["startdate"]
             phd_prog = person_data["phd_staff"][id]["description"]

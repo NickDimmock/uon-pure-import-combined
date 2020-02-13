@@ -55,7 +55,6 @@ def get(config):
             #print(f"Skipping {d['ResID']} - no email address.")
 
         if process:
-            
             # Add area code, if new:
             if d["AREA CODE"] not in py_data["areas"]:
                 py_data["areas"][d["AREA CODE"]] = {
@@ -80,7 +79,7 @@ def get(config):
             div_start_date = convert_date.convert(d['POSITION_DATE_FROM'][0:10], config.start_date)
             div_end_date = convert_date.convert(d['POSITION_DATE_TO'][0:10], config.end_date)
 
-            # FTE in HR data uses many decimal places, here we trim it to two.
+            # FTE in HR data may use many decimal places, here we trim it to two.
             # But it's a string! So we just have to truncate to four characters...
             # Also, some name values have trailing spaces, so best to strip the lot.
 
@@ -156,7 +155,7 @@ def get(config):
                     "forenames": d["FORENAMES"],
                     "surname": d["SURNAME"],
                     "email": d["EMAIL"],
-                    "problem": "Staff ResId already found in staff data. Record excluded."
+                    "problem": "Staff ResId found - adding PhD details to existing staff record."
                 })
                 # Add the PhD data we need to phd_staff list:
                 # First, flip the start date to Pure format:
@@ -190,7 +189,6 @@ def get(config):
 
         # Build the person record
         # Stripping all fields just in case, based on previous data:
-        #py_data["phd_persons"][d["ResId"].strip()] = {
         py_data["phd_persons"][resid] = {
             "title": d["INITCAP(A.TITLE)"].strip(),
             "first_name": d["FORENAMES"].strip(),
