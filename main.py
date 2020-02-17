@@ -30,7 +30,7 @@ with open(f"{config.output_folder}/{config.persons_xml}", "w", newline="", encod
 
 # Create user data:
 user_data = create_user_data.create(py_data)
-with open(f"{config.output_folder}/{config.users_xml}", "w", newline="") as orgfile:
+with open(f"{config.output_folder}/{config.users_xml}", "w", newline="", encoding="utf-8") as orgfile:
     orgfile.write(xmltodict.unparse(user_data, pretty=True))
 
 # Write the main data structure to disk, for reference
