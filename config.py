@@ -16,26 +16,29 @@ phd_problem_file = "phd_problems.csv"
 # Reference master data file:
 master_json = "master_data.json"
 
-org_namespaces = {
-    "xmlns": "v1.organisation-sync.pure.atira.dk",
-    "xmlns:v3": "v3.commons.pure.atira.dk" 
-}
+#org_namespaces = {
+    #"xmlns": "v1.organisation-sync.pure.atira.dk",
+    #"xmlns:v3": "v3.commons.pure.atira.dk" 
+#}
 
-persons_namespaces = {
-    "xmlns": "v1.unified-person-sync.pure.atira.dk",
-    "xmlns:v3": "v3.commons.pure.atira.dk"
-}
+#persons_namespaces = {
+    #"xmlns": "v1.unified-person-sync.pure.atira.dk",
+    #"xmlns:v3": "v3.commons.pure.atira.dk"
+#}
 
-users_namespaces = {
-    "xmlns": "v1.user-sync.pure.atira.dk",
-    "xmlns:v3": "v3.commons.pure.atira.dk"
-}
+#users_namespaces = {
+    #"xmlns": "v1.user-sync.pure.atira.dk",
+    #"xmlns:v3": "v3.commons.pure.atira.dk"
+#}
 
 # Default dates
 start_date = "2005-09-01"
 end_date = "2099-12-31"
 
 uon_id = "UON"
+
+# Add PhDs to Grad School rather than use individual course codes
+phd_org = "GRA"
 
 uon_data = {
     "UON": {
