@@ -77,14 +77,14 @@ def create(person_data):
             # A match here means the current person is also in the PHD data set.
             # So we can just add this as an org association on their staff record,
             # rather than creating a separate PHD person record.
-            phd_code = person_data["phd_staff"][id]["code"]
+            phd_org = config.phd_org
             phd_start = person_data["phd_staff"][id]["startdate"]
             phd_prog = person_data["phd_staff"][id]["description"]
             new_person["organisationAssociations"]["studentOrganisationAssociation"] = {
-                "@id": f"{id}-{phd_code}-{phd_start}",
+                "@id": f"{id}-{phd_org}-{phd_start}",
                 "employmentType": "phd",
                 "organisation": {
-                    "v3:source_id": phd_code
+                    "v3:source_id": phd_org
                 },
                 "period": {
                     "v3:startDate": phd_start
@@ -129,7 +129,7 @@ def create(person_data):
                     "employmentType": "phd",
                     "primaryAssociation": "true",
                     "organisation": {
-                        "v3:source_id": obj['code']
+                        "v3:source_id": phd_org
                     },
                     "period": {
                         "v3:startDate": obj['startdate']
