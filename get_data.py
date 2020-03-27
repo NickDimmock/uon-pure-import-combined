@@ -3,7 +3,6 @@ import re
 import datetime
 import convert_date
 
-
 # This script will:
 #   * Create the initial py_data object
 #   * Populate it with default values from the config file
@@ -79,12 +78,16 @@ def get(config):
             div_start_date = convert_date.convert(d['POSITION_DATE_FROM'][0:10], config.start_date)
             div_end_date = convert_date.convert(d['POSITION_DATE_TO'][0:10], config.end_date)
 
+            # HESA ID should be 13 chars, but data may strip leading zeroes.
+            # Pad them back in if necessary:
+            hesa_id = d['HESA ID'].strip().rjust(13, "0")
+
             # FTE in HR data may use many decimal places, here we trim it to two.
             # But it's a string! So we just have to truncate to four characters...
             # Also, some name values have trailing spaces, so best to strip the lot.
 
             py_data["persons"][d["ResID"]] = {
-                "first_name": d["FORENAMES"].strip(),
+                "first_name": d["FORENAME"].strip(),
                 "surname": d["SURNAME"].strip(),
                 "known_as_first": d["FAMILIAR_NAME"].strip(),
                 "known_as_last": d["SURNAME"].strip(),
@@ -99,7 +102,8 @@ def get(config):
                 "area": d["AREA NAME"].strip(),
                 "dept_code": d["DEPARTMENT"].strip(),
                 "dept": d["DEPT_NAME"].strip(),
-                "fte": d["FTE"][0:4]
+                "fte": d["FTE"][0:4],
+                "hesa_id": hesa_id
             }
     
     # With staff data in place, we can process students:

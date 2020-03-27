@@ -65,11 +65,18 @@ def create(person_data):
                 "@id": f"user-{id}"
             },
             "personIds": {
-                "v3:id": {
-                    "@id": id,
-                    "@type": "employee",
-                    "#text": f"employee-{id}"
-                }
+                "v3:id": [
+                    {
+                        "@id": id,
+                        "@type": "employee",
+                        "#text": f"employee-{id}"
+                    },
+                    {
+                        "@id": obj['hesa_id'],
+                        "@type": "hesastaff",
+                        "#text": obj['hesa_id']
+                    }
+                ]
             }
         }
         # Now add phd_staff data where required:
@@ -91,6 +98,9 @@ def create(person_data):
                 },
                 "programme": phd_prog
             }
+            # Notification to identify affected accounts:
+            print(f"{id} is a combined staff & phd account.")
+            
         # Add the new person to the list of persons:
         persons.append(new_person)
 
