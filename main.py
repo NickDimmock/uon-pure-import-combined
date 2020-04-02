@@ -3,6 +3,7 @@ import json
 import config
 import xmltodict
 import get_data
+import build_csv
 import create_org_data
 import create_person_data
 import create_user_data
@@ -14,6 +15,9 @@ try:
     print("Output folder created ") 
 except FileExistsError:
     print("Output folder already exists")
+
+# Add headers to raw CSV;
+build_csv.build(config)
 
 # Get the combined data:
 py_data = get_data.get(config)

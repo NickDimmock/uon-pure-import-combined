@@ -34,16 +34,16 @@ def get(config):
         process = True
 
         # Identify duplicate entries:
-        if d["ResID"] in staff:
+        if d["RESID"] in staff:
         
             # If we have a duplicate staff entry, only process the data if
             # the "Main position" value is other than 0:
-            if d["main_position"] == "0":
+            if d["MAIN_POSITION"] == "0":
                 process = False
                 #print(f"Skipping {d['ResID']} - not main position.")
             
         # No visiting profs etc.:
-        if d["POSITION"].startswith("Visiting") or d["DEPT_NAME"].startswith("Visting"):
+        if d["POSITION"].startswith("Visiting") or d["DEPARTMENT_NAME"].startswith("Visting"):
             process = False
             #print(f"Skipping {d['ResID']} - visiting role.")
         
@@ -55,9 +55,9 @@ def get(config):
 
         if process:
             # Add area code, if new:
-            if d["AREA CODE"] not in py_data["areas"]:
-                py_data["areas"][d["AREA CODE"]] = {
-                    "name": d["AREA NAME"],
+            if d["AREA_CODE"] not in py_data["areas"]:
+                py_data["areas"][d["AREA_CODE"]] = {
+                    "name": d["AREA_NAME"],
                     "parent": config.uon_id,
                     "type": "faculty",
                     "start_date": config.start_date
@@ -66,8 +66,8 @@ def get(config):
             # Add dept, if new:
             if d["DEPARTMENT"] not in py_data["depts"]:
                 py_data["depts"][d["DEPARTMENT"]] = {
-                    "name": d["DEPT_NAME"],
-                    "parent": d["AREA CODE"],
+                    "name": d["DEPARTMENT_NAME"],
+                    "parent": d["AREA_CODE"],
                     "type": "department",
                     "start_date": config.start_date
                 }
@@ -80,14 +80,14 @@ def get(config):
 
             # HESA ID should be 13 chars, but data may strip leading zeroes.
             # Pad them back in if necessary:
-            hesa_id = d['HESA ID'].strip().rjust(13, "0")
+            hesa_id = d['HESA_ID'].strip().rjust(13, "0")
 
             # FTE in HR data may use many decimal places, here we trim it to two.
             # But it's a string! So we just have to truncate to four characters...
             # Also, some name values have trailing spaces, so best to strip the lot.
 
-            py_data["persons"][d["ResID"]] = {
-                "first_name": d["FORENAME"].strip(),
+            py_data["persons"][d["RESID"]] = {
+                "first_name": d["FORENAMES"].strip(),
                 "surname": d["SURNAME"].strip(),
                 "known_as_first": d["FAMILIAR_NAME"].strip(),
                 "known_as_last": d["SURNAME"].strip(),
@@ -98,10 +98,10 @@ def get(config):
                 "uni_end_date": uni_end_date,
                 "div_start_date": div_start_date,
                 "div_end_date": div_end_date,
-                "area_code": d["AREA CODE"].strip(),
-                "area": d["AREA NAME"].strip(),
+                "area_code": d["AREA_CODE"].strip(),
+                "area": d["AREA_NAME"].strip(),
                 "dept_code": d["DEPARTMENT"].strip(),
-                "dept": d["DEPT_NAME"].strip(),
+                "dept": d["DEPARTMENT_NAME"].strip(),
                 "fte": d["FTE"][0:4],
                 "hesa_id": hesa_id
             }
