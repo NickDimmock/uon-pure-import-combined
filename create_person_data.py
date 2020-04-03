@@ -34,6 +34,7 @@ def create(person_data):
                 }
             },
             "gender": "unknown",
+            "dateOfBirth": obj["date_of_birth"],
             "employeeStartDate": obj["uni_start_date"],
             "systemLeavingDate": obj["uni_end_date"],
             "organisationAssociations": {

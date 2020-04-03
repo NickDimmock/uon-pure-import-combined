@@ -82,6 +82,18 @@ def get(config):
             # Pad them back in if necessary:
             hesa_id = d['HESA_ID'].strip().rjust(13, "0")
 
+            # Make sure date of birth is sensible.
+            # Pure specifies dd-mm-yyyy, but our data uses yyyy-mm-dd.
+            # The import tool still accepts this format.
+            # DoB will be blank unless it's included in the CSV data and
+            # matches the format yyyy-mm-dd.
+            date_of_birth = ""
+            if len(d["DATE_OF_BIRTH"]):
+                if re.match("^\d{4}-\d{2}-\d{2}", d["DATE_OF_BIRTH"]):
+                    date_of_birth = d["DATE_OF_BIRTH"][0:10]
+                else:
+                    print(f"DoB mismatch: {d['DATE_OF_BIRTH']} for {d['RESID']}")
+            
             # FTE in HR data may use many decimal places, here we trim it to two.
             # But it's a string! So we just have to truncate to four characters...
             # Also, some name values have trailing spaces, so best to strip the lot.
@@ -103,7 +115,8 @@ def get(config):
                 "dept_code": d["DEPARTMENT"].strip(),
                 "dept": d["DEPARTMENT_NAME"].strip(),
                 "fte": d["FTE"][0:4],
-                "hesa_id": hesa_id
+                "hesa_id": hesa_id,
+                "date_of_birth": date_of_birth
             }
     
     # With staff data in place, we can process students:
