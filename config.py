@@ -14,6 +14,9 @@ org_xml = "org.xml"
 # Filename for PhD problems CSV:
 phd_problem_file = "phd_problems.csv"
 
+# Notes from data import:
+data_notes_file = "data_notes.txt"
+
 # Reference master data file:
 master_json = "master_data.json"
 
@@ -53,4 +56,13 @@ uon_data = {
         "type": "department",
         "start_date": "2005-09-01"
     }
+}
+
+# Blacklist of unwanted depts to avoid duplicates
+
+dept_blacklist = {
+    "LLS",
+    "LTE",
+    "FHS",
+    "FEH"
 }

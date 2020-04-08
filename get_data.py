@@ -16,6 +16,9 @@ def get(config):
         reader = csv.DictReader(f)
         data = list(reader)
 
+    # Note logging:
+    notes = open(f"{config.output_folder}/{config.data_notes_file}", "w")
+
     # Create starting data, including root UON info from config and phd data:
     py_data = {
         "areas": config.uon_data,
@@ -27,21 +30,36 @@ def get(config):
 
     staff = {}
 
+    # Keep track of already filtered areas:
+    filtered_areas = []
+
     # Take the data line by line:
     for d in data:
 
         # Flag to determine whether or not to include a staff member:
         process = True
-
-        # Identify duplicate entries:
-        if d["RESID"] in staff:
         
+        
+
+        if d["AREA_CODE"] in config.dept_blacklist:
+            if d["AREA_CODE"] not in filtered_areas:
+                notes.write(f"Blacklisted area code: {d['AREA_CODE']}.\n")
+                filtered_areas.append(d["AREA_CODE"])
+            process = False
+
+        # Identify duplicate staff entries:
+        if d["RESID"] in py_data["persons"]:
             # If we have a duplicate staff entry, only process the data if
             # the "Main position" value is other than 0:
             if d["MAIN_POSITION"] == "0":
                 process = False
-                #print(f"Skipping {d['ResID']} - not main position.")
-            
+                notes.write(f"Skipping {d['RESID']} - not main position ({d['EMAIL']}).\n")
+            # Otherwise we have duplicate main positions and are overwriting the
+            # previous one. This may fix default date of birth rows - proceed,
+            # but log it:
+            else:
+                notes.write(f"Duplicate main position found for {d['RESID']} ({d['EMAIL']}).\n")
+
         # No visiting profs etc.:
         if d["POSITION"].startswith("Visiting") or d["DEPARTMENT_NAME"].startswith("Visting"):
             process = False
@@ -51,7 +69,7 @@ def get(config):
         # In past, we've had single-space 'empty' email data, so also check for that.
         if not d["EMAIL"] or d["EMAIL"].strip() == "":
             process = False
-            #print(f"Skipping {d['ResID']} - no email address.")
+            notes.write(f"Skipping {d['RESID']} - no email address ({d['FORENAMES']} {d['SURNAME']}).\n")
 
         if process:
             # Add area code, if new:
@@ -92,8 +110,10 @@ def get(config):
                 if re.match("^\d{4}-\d{2}-\d{2}", d["DATE_OF_BIRTH"]):
                     date_of_birth = d["DATE_OF_BIRTH"][0:10]
                 else:
-                    print(f"DoB mismatch: {d['DATE_OF_BIRTH']} for {d['RESID']}")
-            
+                    notes.write(f"DoB format mismatch: {d['DATE_OF_BIRTH']} for {d['RESID']} ({d['EMAIL']}).\n")
+                if date_of_birth[0:10] == "1900-01-01":
+                    notes.write(f"Default DoB found for {d['RESID']} ({d['EMAIL']}).\n")
+
             # FTE in HR data may use many decimal places, here we trim it to two.
             # But it's a string! So we just have to truncate to four characters...
             # Also, some name values have trailing spaces, so best to strip the lot.
@@ -223,5 +243,7 @@ def get(config):
             writer.writeheader()
             for row in problems:
                 writer.writerow(row)
+
+    notes.close()
 
     return py_data
