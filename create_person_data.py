@@ -106,6 +106,7 @@ def create(person_data):
         persons.append(new_person)
 
     # Add non-staff PhDs:
+    phd_org = config.phd_org
     for id, obj in person_data["phd_persons"].items():
         new_phd = {
             "@id": id,
@@ -147,7 +148,10 @@ def create(person_data):
                     },
                     "programme": obj['description']
                 }
-            }
+            },
+            "user": {
+                "@id": f"user-{id}"
+            },
         }
         persons.append(new_phd)
 

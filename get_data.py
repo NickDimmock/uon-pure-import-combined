@@ -101,17 +101,16 @@ def get(config):
             hesa_id = d['HESA_ID'].strip().rjust(13, "0")
 
             # Make sure date of birth is sensible.
-            # Pure specifies dd-mm-yyyy, but our data uses yyyy-mm-dd.
-            # The import tool still accepts this format.
+            # Pure specifies dd-mm-yyyy,  our data uses dd/mm/yyyy
             # DoB will be blank unless it's included in the CSV data and
-            # matches the format yyyy-mm-dd.
+            # matches the format dd/mm/yyyy.
             date_of_birth = ""
             if len(d["DATE_OF_BIRTH"]):
-                if re.match("^\d{4}-\d{2}-\d{2}", d["DATE_OF_BIRTH"]):
-                    date_of_birth = d["DATE_OF_BIRTH"][0:10]
+                if re.match("^\d{2}/\d{2}/\d{4}", d["DATE_OF_BIRTH"]):
+                    date_of_birth = d["DATE_OF_BIRTH"].replace("/","-")
                 else:
                     notes.write(f"DoB format mismatch: {d['DATE_OF_BIRTH']} for {d['RESID']} ({d['EMAIL']}).\n")
-                if date_of_birth[0:10] == "1900-01-01":
+                if date_of_birth[0:10] == "01/01/1900":
                     notes.write(f"Default DoB found for {d['RESID']} ({d['EMAIL']}).\n")
 
             # FTE in HR data may use many decimal places, here we trim it to two.
@@ -226,7 +225,7 @@ def get(config):
 
         # Build the person record
         # Stripping all fields just in case, based on previous data:
-        py_data["phd_persons"][resid] = {
+        py_data["phd_persons"][padded_id] = {
             "title": d["INITCAP(A.TITLE)"].strip(),
             "first_name": d["FORENAMES"].strip(),
             "surname": d["SURNAME"].strip(),
