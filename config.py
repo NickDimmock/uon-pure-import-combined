@@ -2,6 +2,7 @@
 staff_raw_source = "data/puredatahesa.csv"
 staff_source = "data/data.csv"
 phd_source = "data/phd-data.csv"
+phd_staff_source = "data/phd-staff.tsv"
 
 # master output folder:
 output_folder = "out"
@@ -16,6 +17,9 @@ phd_problem_file = "phd_problems.csv"
 
 # Notes from data import:
 data_notes_file = "data_notes.txt"
+
+# ID lookup log:
+id_lookup_log = "id_lookup_log.txt"
 
 # Reference master data file:
 master_json = "master_data.json"

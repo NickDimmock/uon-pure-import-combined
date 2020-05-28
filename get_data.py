@@ -2,6 +2,7 @@ import csv
 import re
 import datetime
 import convert_date
+import create_id_lookup
 
 # This script will:
 #   * Create the initial py_data object
@@ -18,6 +19,9 @@ def get(config):
 
     # Note logging:
     notes = open(f"{config.output_folder}/{config.data_notes_file}", "w")
+
+    # Create our staff login to employee ID lookup table:
+    login_to_id = create_id_lookup.create()
 
     # Create starting data, including root UON info from config and phd data:
     py_data = {
@@ -155,15 +159,23 @@ def get(config):
 
         # Catch non-numeric IDs:
         if not resid.isdigit():
-            problems.append({
-                    "ResId": resid,
-                    "studentid": d["STUDENT_ID"],
-                    "forenames": d["FORENAMES"],
-                    "surname": d["SURNAME"],
-                    "email": d["EMAIL"],
-                    "problem": "Unusable name-based resid - excluded."
-                })
-            continue
+            if resid.lower() in login_to_id:
+                # If we can match the non-numeric ID in the PhD lopkup table,
+                # patch in the associated resid for use later.
+                print(f"Found a missing PhD login for {resid}!")
+                resid = login_to_id[resid.lower()]
+            else:
+                # Otherwise, we can't really do much - just log the mismatch and skip this record:
+                print(f"Didn't find a missing PhD login for {resid} :(")
+                problems.append({
+                        "ResId": resid,
+                        "studentid": d["STUDENT_ID"],
+                        "forenames": d["FORENAMES"],
+                        "surname": d["SURNAME"],
+                        "email": d["EMAIL"],
+                        "problem": "Unusable name-based resid - excluded."
+                    })
+                continue
 
         # Catch records with no start date included:
         if not d["START_DATE"]:
