@@ -63,7 +63,7 @@ def create(person_data):
                 }
             },
             "user": {
-                "@id": f"user-{id}"
+                "@id": f"user-{obj['user_id']}"
             },
             "personIds": {
                 "v3:id": [
