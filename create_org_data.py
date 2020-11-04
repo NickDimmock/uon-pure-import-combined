@@ -15,7 +15,7 @@ def create(data):
                 "type": obj["type"],
                 "name": {"v3:text": obj["name"]},
                 "startDate": obj["start_date"],
-                "endDate": "2099-01-01",
+                "endDate": "2050-01-01",
                 "visibility": "Public"
             }
         if "parent" in obj:
