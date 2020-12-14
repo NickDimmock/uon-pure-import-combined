@@ -87,6 +87,7 @@ def create(person_data):
             # rather than creating a separate PHD person record.
             phd_org = config.phd_org
             phd_start = person_data["phd_staff"][id]["startdate"]
+            phd_end = person_data["phd_staff"][id]["enddate"]
             phd_prog = person_data["phd_staff"][id]["description"]
             new_person["organisationAssociations"]["studentOrganisationAssociation"] = {
                 "@id": f"{id}-{phd_org}-{phd_start}",
@@ -95,7 +96,8 @@ def create(person_data):
                     "v3:source_id": phd_org
                 },
                 "period": {
-                    "v3:startDate": phd_start
+                    "v3:startDate": phd_start,
+                    "v3:endDate": phd_end
                 },
                 "programme": phd_prog
             }
@@ -144,7 +146,8 @@ def create(person_data):
                         "v3:source_id": phd_org
                     },
                     "period": {
-                        "v3:startDate": obj['startdate']
+                        "v3:startDate": obj['startdate'],
+                        "v3:endDate": obj['enddate']
                     },
                     "programme": obj['description']
                 }

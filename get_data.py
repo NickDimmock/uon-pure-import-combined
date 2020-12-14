@@ -155,6 +155,17 @@ def get(config):
     # A list of our various complaints:
     problems = []
 
+    # Set temporary start date for PhDs to 1 Jan this year.
+    # We need to create is as dd/mm/yyyy as it will be updated to the correct
+    # format later, along with all other start dates.
+    phd_default_start_date = datetime.date.today().strftime("01/01/%Y")
+
+    # No end date is provided for PhDs, but if someone has left and
+    # restarted in some way, Pure will set one - so we need to provide
+    # a value to override any dates added by Pure.
+    # We can use the Pure date format directly here:
+    phd_default_end_date = "2099-12-31"
+
     for d in phd_data:
         # Grab resid and remove leading zeros:
         resid = d["RESID"].strip()
@@ -180,7 +191,8 @@ def get(config):
                     })
                 continue
 
-        # Catch records with no start date included:
+        # Catch records with no start date included and use a temporary date:
+        
         if not d["START_DATE"]:
            problems.append({
                 "ResId": resid,
@@ -188,10 +200,10 @@ def get(config):
                 "forenames": d["FORENAMES"],
                 "surname": d["SURNAME"],
                 "email": d["EMAIL"],
-                "problem": "No start date provided."
+                "problem": "No start date provided - used " + phd_default_start_date
            })
            # Skip to next record:
-           continue
+           d["START_DATE"] = phd_default_start_date
         
         # Pad out the resid to 8 digits (for PhDs with staff IDs):
         padded_id = resid.rjust(8, "0")
@@ -216,7 +228,8 @@ def get(config):
                     "email": d["EMAIL"].strip(),
                     "description": d["COURSE_DES"].strip(),
                     "code": d["COURSE_CODE"].strip().upper(),
-                    "startdate": startdate
+                    "startdate": startdate,
+                    "enddate": phd_default_end_date
                 }
                 # Skip to next record:
                 continue
@@ -247,7 +260,8 @@ def get(config):
             "email": d["EMAIL"].strip(),
             "description": d["COURSE_DES"].strip(),
             "code": d["COURSE_CODE"].strip().upper(),
-            "startdate": startdate
+            "startdate": startdate,
+            "enddate": phd_default_end_date
         }
 
         # CSV export of problems:
