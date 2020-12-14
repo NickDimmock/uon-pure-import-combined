@@ -202,7 +202,7 @@ def get(config):
                 "email": d["EMAIL"],
                 "problem": "No start date provided - used " + phd_default_start_date
            })
-           # Skip to next record:
+           # Add new date to data:
            d["START_DATE"] = phd_default_start_date
         
         # Pad out the resid to 8 digits (for PhDs with staff IDs):
