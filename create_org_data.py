@@ -1,6 +1,5 @@
 import config
 
-
 def create(data):
     org_data = {
         "organisations": {
@@ -11,14 +10,17 @@ def create(data):
     }
     orgs = []
     for id, obj in data.items():
-        orgs.append(
-            {
+        org = {
                 "organisationId": id,
                 "type": obj["type"],
                 "name": {"v3:text": obj["name"]},
                 "startDate": obj["start_date"],
+                "endDate": "2050-01-01",
+                "visibility": "Public"
             }
-        )
+        if "parent" in obj:
+            org["parentOrganisationId"] = obj["parent"]
+        orgs.append(org)
 
     org_data["organisations"]["organisation"] = orgs
 

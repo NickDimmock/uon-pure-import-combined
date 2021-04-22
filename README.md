@@ -1,5 +1,7 @@
 # uon-pure-imports-combined
 
+This version of the code uses the xmltodict library.
+
 ## Setup for PhD person & user records
 
 Some of these settings may already be active as part of the existing staff sync.
@@ -38,11 +40,5 @@ As this doesn't currently exist in the staff data, in thas been manually added t
 - org.xml - organisations import file
 - persons.xml  - persons import file
 - users.xml  - users import file
-- phd_problems.csv - csv export of excluded phd records for Pure team
-
-### In archive folder (dated filenames)
-
-All files from output folder, plus:
-
-- master_data.json - master copy of staff & phd data
-- org_list.json - reference file for org info derived from staff data
+- phd_problems.csv - CSV export of excluded phd records for Pure team
+- master_data.json - JSON export of data structure
