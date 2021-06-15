@@ -96,9 +96,9 @@ def get(config):
             
             # Convert date, using first ten chars (omit time):
             uni_start_date = convert_date.convert(d['START_DATE'][0:10], config.start_date)
-            uni_end_date = convert_date.convert(d['END_DATE'][0:10], config.end_date)
+            uni_end_date = convert_date.convert(d['END_DATE'][0:10], config.start_date)
             div_start_date = convert_date.convert(d['POSITION_DATE_FROM'][0:10], config.start_date)
-            div_end_date = convert_date.convert(d['POSITION_DATE_TO'][0:10], config.end_date)
+            div_end_date = convert_date.convert(d['POSITION_DATE_TO'][0:10], config.start_date)
 
             # HESA ID should be 13 chars, but data may strip leading zeroes.
             # Pad them back in if necessary:
