@@ -10,6 +10,22 @@ import create_id_lookup
 #   * Create the areas and depts lists
 #   * Create the research active staff list
 
+# Function to set title classification value.
+# Miss/Mr/Mrs/Ms are 'designation'
+# All other values are assumed to be 'prenominal'
+# (e.g. Dr / Prof / Father)
+def getTitleClass(title):
+    designationTitles = [
+        "Miss",
+        "Mr",
+        "Mrs",
+        "Ms"
+    ]
+    if title in designationTitles:
+        return "designation"
+    else:
+        return "prenominal"
+
 def get(config):
 
     # Read in the staff and org CSV data:
@@ -43,8 +59,6 @@ def get(config):
         # Flag to determine whether or not to include a staff member:
         process = True
         
-        
-
         if d["AREA_CODE"] in config.dept_blacklist:
             if d["AREA_CODE"] not in filtered_areas:
                 notes.write(f"Blacklisted area code: {d['AREA_CODE']}.\n")
@@ -117,6 +131,10 @@ def get(config):
                 if date_of_birth[0:10] == "01/01/1900":
                     notes.write(f"Default DoB found for {d['RESID']} ({d['EMAIL']}).\n")
 
+            # Establish classification for title:
+            title = d["TITLE"].strip()
+            titleClass = getTitleClass(title)
+
             # FTE in HR data may use many decimal places, here we trim it to two.
             # But it's a string! So we just have to truncate to four characters...
             # Also, some name values have trailing spaces, so best to strip the lot.
@@ -129,7 +147,8 @@ def get(config):
                 "surname": d["SURNAME"].strip(),
                 "known_as_first": d["FAMILIAR_NAME"].strip(),
                 "known_as_last": d["SURNAME"].strip(),
-                "title": d["TITLE"].strip(),
+                "title": title,
+                "title_class": titleClass,
                 "email": d["EMAIL"].lower().strip(),
                 "role": d["POSITION"].strip(),
                 "uni_start_date": uni_start_date,
@@ -251,10 +270,15 @@ def get(config):
         startdate_obj = datetime.datetime.strptime(d["START_DATE"], "%d/%m/%Y")
         startdate = startdate_obj.strftime("%Y-%m-%d")
 
+        # Establish classification for title:
+        title = d["INITCAP(A.TITLE)"].strip()
+        titleClass = getTitleClass(title)
+
         # Build the person record
         # Stripping all fields just in case, based on previous data:
         py_data["phd_persons"][padded_id] = {
-            "title": d["INITCAP(A.TITLE)"].strip(),
+            "title": title,
+            "title_class": titleClass,
             "first_name": d["FORENAMES"].strip(),
             "surname": d["SURNAME"].strip(),
             "email": d["EMAIL"].strip(),

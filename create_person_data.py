@@ -23,7 +23,7 @@ def create(person_data):
             "titles": {
                 "title": {
                     "@id": f"title-{id}",
-                    "typeClassification": "designation",
+                    "typeClassification": obj["title_class"],
                     "value": {
                         "v3:text": {
                             "@lang": "en",
@@ -119,7 +119,7 @@ def create(person_data):
             "titles": {
                 "title": {
                     "@id": f"title-{id}",
-                    "typeClassification": "designation",
+                    "typeClassification": obj["title_class"],
                     "value": {
                         "v3:text": {
                             "@lang": "en",
