@@ -24,13 +24,13 @@ PERSON_IDS: Enable sync
 
 ## On Pure
 
-Graduate School must exist with importedOrganisation ID "GRA".
-As this doesn't currently exist in the staff data, in has been manually added to the structure in config.py, just after the creation of the UoN element. An org import with GRA included must be run before the initial import of PhD data to support this (this should align with the current configuration and not require any additional steps).
+Graduate School must exist with importedOrganisation ID GRA.
+As this doesn't currently exist in the staff data, in has been manually added to the structure in `config.py`, just after the creation of the UoN element. An org import with GRA included must be run before the initial import of PhD data to support this (this should align with the current configuration and not require any additional steps).
 
 ## Usage
 
 1. Copy source data csv files to 'data' folder, matching filename in config.json
-2. Run main.py using Python 3
+2. Run `main.py` using Python 3
 3. Output files will be created in 'out' folder
 
 ## Files created
@@ -40,5 +40,15 @@ As this doesn't currently exist in the staff data, in has been manually added to
 - org.xml - organisations import file
 - persons.xml  - persons import file
 - users.xml  - users import file
-- phd_problems.csv - CSV export of excluded phd records for Pure team
-- master_data.json - JSON export of data structure
+- phd-notes.csv - CSV export of excluded PhD records for Pure team
+- data-notes.csv - CSV list of notes / issues from puredatahesa conversion
+- id_lookip_log.txt - Record of issues creating ID lookups values for PhD staff
+- master_data.json - JSON export of main data structure
+
+## Other scripts
+
+`backup.py` will copy output files with a -prev suffix for comparison.
+Currently this must be run manually.
+
+`check.py` will check the current input files for common errors.
+It will output 1 if no errors are found, or 0 followed by a list of errors.

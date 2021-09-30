@@ -13,10 +13,10 @@ users_xml = "users.xml"
 org_xml = "org.xml"
 
 # Filename for PhD problems CSV:
-phd_problem_file = "phd_problems.csv"
+phd_problem_file = "phd_notes.csv"
 
 # Notes from data import:
-data_notes_file = "data_notes.txt"
+data_notes_file = "data_notes.csv"
 
 # ID lookup log:
 id_lookup_log = "id_lookup_log.txt"

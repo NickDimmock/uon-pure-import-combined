@@ -102,7 +102,7 @@ def create(person_data):
                 "programme": phd_prog
             }
             # Notification to identify affected accounts:
-            print(f"{id} is a combined staff & phd account.")
+            # print(f"{id} is a combined staff & phd account.")
             
         # Add the new person to the list of persons:
         persons.append(new_person)
