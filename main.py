@@ -12,9 +12,9 @@ import create_user_data
 try:
     # Create target Directory
     os.mkdir(config.output_folder)
-    print("Output folder created ") 
+    print(f"Output folder ({config.output_folder}) created.") 
 except FileExistsError:
-    print("Output folder already exists")
+    print(f"Output folder ({config.output_folder}) already exists.")
 
 # Add headers to raw CSV;
 build_csv.build(config)
@@ -42,6 +42,7 @@ with open(f"{config.output_folder}/{config.master_json}", "w") as f:
     f.write(json.dumps(py_data, indent=4))
 
 # Log grand totals to console:
+print("\n-= Data processed! =-")
 print(f"Areas: {len(py_data['areas'])}")
 print(f"Depts: {len(py_data['depts'])}")
 print(f"Staff: {len(py_data['persons'])}")

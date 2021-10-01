@@ -10,6 +10,22 @@ import create_id_lookup
 #   * Create the areas and depts lists
 #   * Create the research active staff list
 
+# Function to set title classification value.
+# Miss/Mr/Mrs/Ms are 'designation'
+# All other values are assumed to be 'prenominal'
+# (e.g. Dr / Prof / Father)
+def getTitleClass(title):
+    designationTitles = [
+        "Miss",
+        "Mr",
+        "Mrs",
+        "Ms"
+    ]
+    if title in designationTitles:
+        return "designation"
+    else:
+        return "prenominal"
+
 def get(config):
 
     # Read in the staff and org CSV data:
@@ -43,11 +59,9 @@ def get(config):
         # Flag to determine whether or not to include a staff member:
         process = True
         
-        
-
         if d["AREA_CODE"] in config.dept_blacklist:
             if d["AREA_CODE"] not in filtered_areas:
-                notes.write(f"Blacklisted area code: {d['AREA_CODE']}.\n")
+                notes.write(f"{d['RESID']},{d['EMAIL']},Blacklisted area code: {d['AREA_CODE']}\n")
                 filtered_areas.append(d["AREA_CODE"])
             process = False
 
@@ -57,23 +71,22 @@ def get(config):
             # the "Main position" value is other than 0:
             if d["MAIN_POSITION"] == "0":
                 process = False
-                notes.write(f"Skipping {d['RESID']} - not main position ({d['EMAIL']}).\n")
+                notes.write(f"{d['RESID']},{d['EMAIL']},Skipped - not main position\n")
             # Otherwise we have duplicate main positions and are overwriting the
-            # previous one. This may fix default date of birth rows - proceed,
-            # but log it:
+            # previous one. This may fix default date of birth rows - proceed, but log it:
             else:
-                notes.write(f"Duplicate main position found for {d['RESID']} ({d['EMAIL']}).\n")
+                notes.write(f"{d['RESID']},{d['EMAIL']},Duplicate main position\n")
 
         # No visiting profs etc.:
         if d["POSITION"].startswith("Visiting") or d["DEPARTMENT_NAME"].startswith("Visting"):
             process = False
-            #print(f"Skipping {d['ResID']} - visiting role.")
+            notes.write(f"{d['RESID']},{d['EMAIL']},Skipped - visiting role\n")
         
         # Email is required
         # In past, we've had single-space 'empty' email data, so also check for that.
         if not d["EMAIL"] or d["EMAIL"].strip() == "":
             process = False
-            notes.write(f"Skipping {d['RESID']} - no email address ({d['FORENAMES']} {d['SURNAME']}).\n")
+            notes.write(f"{d['RESID']},NONE,Skipped - no email address for {d['FORENAMES']} {d['SURNAME']}\n")
 
         if process:
             # Add area code, if new:
@@ -113,9 +126,13 @@ def get(config):
                 if re.match("^\d{2}/\d{2}/\d{4}", d["DATE_OF_BIRTH"]):
                     date_of_birth = d["DATE_OF_BIRTH"].replace("/","-")
                 else:
-                    notes.write(f"DoB format mismatch: {d['DATE_OF_BIRTH']} for {d['RESID']} ({d['EMAIL']}).\n")
+                    notes.write(f"{d['RESID']},{d['EMAIL']},DoB format mismatch: {d['DATE_OF_BIRTH']}\n")
                 if date_of_birth[0:10] == "01/01/1900":
-                    notes.write(f"Default DoB found for {d['RESID']} ({d['EMAIL']}).\n")
+                    notes.write(f"{d['RESID']},{d['EMAIL']},Default DoB value\n")
+
+            # Establish classification for title:
+            title = d["TITLE"].strip()
+            titleClass = getTitleClass(title)
 
             # FTE in HR data may use many decimal places, here we trim it to two.
             # But it's a string! So we just have to truncate to four characters...
@@ -129,7 +146,8 @@ def get(config):
                 "surname": d["SURNAME"].strip(),
                 "known_as_first": d["FAMILIAR_NAME"].strip(),
                 "known_as_last": d["SURNAME"].strip(),
-                "title": d["TITLE"].strip(),
+                "title": title,
+                "title_class": titleClass,
                 "email": d["EMAIL"].lower().strip(),
                 "role": d["POSITION"].strip(),
                 "uni_start_date": uni_start_date,
@@ -156,8 +174,8 @@ def get(config):
     problems = []
 
     # Set temporary start date for PhDs to 1 Jan this year.
-    # We need to create is as dd/mm/yyyy as it will be updated to the correct
-    # format later, along with all other start dates.
+    # We need to create this as dd/mm/yyyy, as it will be updated to the
+    # expected Pure format later, along with all other start dates.
     phd_default_start_date = datetime.date.today().strftime("01/01/%Y")
 
     # No end date is provided for PhDs, but if someone has left and
@@ -171,16 +189,18 @@ def get(config):
         resid = d["RESID"].strip()
         resid = re.sub(r"^0*","",resid)
 
+        # Course decriptions arrive in quotes - remove these:
+        d["COURSE_DES"] = re.sub(r"^\"(.*)\"$",r"\1",d["COURSE_DES"])
+
         # Catch non-numeric IDs:
         if not resid.isdigit():
             if resid.lower() in login_to_id:
                 # If we can match the non-numeric ID in the PhD lopkup table,
                 # patch in the associated resid for use later.
-                print(f"Found a missing PhD login for {resid}!")
+                notes.write(f"{resid},{d['EMAIL']},Missing PhD login found and added")
                 resid = login_to_id[resid.lower()]
             else:
                 # Otherwise, we can't really do much - just log the mismatch and skip this record:
-                print(f"Didn't find a missing PhD login for {resid} :(")
                 problems.append({
                         "ResId": resid,
                         "studentid": d["STUDENT_ID"],
@@ -251,10 +271,15 @@ def get(config):
         startdate_obj = datetime.datetime.strptime(d["START_DATE"], "%d/%m/%Y")
         startdate = startdate_obj.strftime("%Y-%m-%d")
 
+        # Establish classification for title:
+        title = d["INITCAP(A.TITLE)"].strip()
+        titleClass = getTitleClass(title)
+
         # Build the person record
         # Stripping all fields just in case, based on previous data:
         py_data["phd_persons"][padded_id] = {
-            "title": d["INITCAP(A.TITLE)"].strip(),
+            "title": title,
+            "title_class": titleClass,
             "first_name": d["FORENAMES"].strip(),
             "surname": d["SURNAME"].strip(),
             "email": d["EMAIL"].strip(),

@@ -23,7 +23,7 @@ def create(person_data):
             "titles": {
                 "title": {
                     "@id": f"title-{id}",
-                    "typeClassification": "designation",
+                    "typeClassification": obj["title_class"],
                     "value": {
                         "v3:text": {
                             "@lang": "en",
@@ -102,7 +102,7 @@ def create(person_data):
                 "programme": phd_prog
             }
             # Notification to identify affected accounts:
-            print(f"{id} is a combined staff & phd account.")
+            # print(f"{id} is a combined staff & phd account.")
             
         # Add the new person to the list of persons:
         persons.append(new_person)
@@ -119,7 +119,7 @@ def create(person_data):
             "titles": {
                 "title": {
                     "@id": f"title-{id}",
-                    "typeClassification": "designation",
+                    "typeClassification": obj["title_class"],
                     "value": {
                         "v3:text": {
                             "@lang": "en",
