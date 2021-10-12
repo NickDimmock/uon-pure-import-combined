@@ -78,7 +78,8 @@ def create(person_data):
                         "#text": obj['hesa_id']
                     }
                 ]
-            }
+            },
+            "visibility": f"{obj['visibility']}"
         }
         # Now add phd_staff data where required:
         if id in person_data["phd_staff"].keys():
@@ -155,6 +156,7 @@ def create(person_data):
             "user": {
                 "@id": f"user-{id}"
             },
+            "visibility": f"{obj['visibility']}"
         }
         persons.append(new_phd)
 

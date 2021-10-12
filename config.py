@@ -70,3 +70,8 @@ dept_blacklist = {
     "FHS",
     "FEH"
 }
+
+# Default visibility for staff / PhD profiles
+
+staff_visibility = "Restricted"
+phd_visibility = "Restricted"

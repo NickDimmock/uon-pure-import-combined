@@ -139,7 +139,6 @@ def get(config):
             # Also, some name values have trailing spaces, so best to strip the lot.
             # Now including MAIN_RESID for use as user account ID, to enable access
             # for academic staff who've been assinged new resid values.
-
             py_data["persons"][d["RESID"]] = {
                 "user_id": d["MAIN_RESID"].strip(),
                 "first_name": d["FORENAMES"].strip(),
@@ -160,7 +159,8 @@ def get(config):
                 "dept": d["DEPARTMENT_NAME"].strip(),
                 "fte": d["FTE"][0:4],
                 "hesa_id": hesa_id,
-                "date_of_birth": date_of_birth
+                "date_of_birth": date_of_birth,
+                "visibility": config.staff_visibility
             }
     
     # With staff data in place, we can process students:
@@ -276,7 +276,7 @@ def get(config):
         titleClass = getTitleClass(title)
 
         # Build the person record
-        # Stripping all fields just in case, based on previous data:
+        # Stripping all fields just in case, based on previous data.
         py_data["phd_persons"][padded_id] = {
             "title": title,
             "title_class": titleClass,
@@ -286,7 +286,8 @@ def get(config):
             "description": d["COURSE_DES"].strip(),
             "code": d["COURSE_CODE"].strip().upper(),
             "startdate": startdate,
-            "enddate": phd_default_end_date
+            "enddate": phd_default_end_date,
+            "visibility": config.phd_visibility
         }
 
         # CSV export of problems:
