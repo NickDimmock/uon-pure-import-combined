@@ -2,7 +2,7 @@
 # Will output 1 if no errors are found
 # If errors are found, will output 0 followed by report
 
-import os.path
+import os.path, time
 
 hesa_file = "data/puredatahesa.csv"
 
@@ -27,6 +27,16 @@ if not os.path.isfile(staff_file):
 
 if(len(errors) == 0):
 
+    # puredatahesa.csv and phd-staff.tsv should not be more than two days old:
+
+    now = time.time()
+    hesa_file_age = now - os.path.getmtime(hesa_file)
+    staff_file_age = now - os.path.getmtime(staff_file)
+    if(hesa_file_age > 172800):
+        errors.append(f"{hesa_file} may not have been updated.")
+    if(staff_file_age > 172800):
+        errors.append(f"{staff_file} may not have been updated.")
+
     # Length of file - ensures file is longer than the required length:
 
     req_len = 100
@@ -35,19 +45,19 @@ if(len(errors) == 0):
         for i, l in enumerate(f):
             pass
         if (i < req_len):
-            errors.append(f"puredatahesa.csv: File is under {req_len} lines")
+            errors.append(f"puredatahesa.csv: File is under {req_len} lines.")
 
     with open(phd_file) as f:
         for i, l in enumerate(f):
             pass
         if (i < req_len):
-            errors.append(f"phd-data.csv: File is under {req_len} lines")
+            errors.append(f"phd-data.csv: File is under {req_len} lines.")
 
     with open(staff_file) as f:
         for i, l in enumerate(f):
             pass
         if (i < req_len):
-            errors.append(f"phd-staff.tsv: File is under {req_len} lines")
+            errors.append(f"phd-staff.tsv: File is under {req_len} lines.")
 
     # CSV data should be quoted. Checks will bail out as soon as one non-quoted line is found.
     # (We just check the first character here.)
