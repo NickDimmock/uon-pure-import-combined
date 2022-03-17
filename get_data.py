@@ -39,6 +39,13 @@ def get(config):
     # Create our staff login to employee ID lookup table:
     login_to_id = create_id_lookup.create()
 
+    # Array to caputre RESID and MAIN_RESID values - used during PhD stage
+    # to link staff / student accounts:
+    used_resids = []
+
+    # Associated dict to map RESID to MAIN_RESID value, where the two differ:
+    resid_map = {}
+
     # Create starting data, including root UON info from config and phd data:
     py_data = {
         "areas": config.uon_data,
@@ -47,8 +54,6 @@ def get(config):
         "phd_persons": {},
         "phd_staff": {}
     }
-
-    staff = {}
 
     # Keep track of already filtered areas:
     filtered_areas = []
@@ -89,6 +94,13 @@ def get(config):
             notes.write(f"{d['RESID']},NONE,Skipped - no email address for {d['FORENAMES']} {d['SURNAME']}\n")
 
         if process:
+            # Store RESIDs for later reference:
+            used_resids.append(d["RESID"])
+            # Also store & map MAIN_RESID if the values differ:
+            if d["RESID"] != d["MAIN_RESID"]:
+                used_resids.append(d["MAIN_RESID"])
+                resid_map[d["MAIN_RESID"]] = d["RESID"]
+
             # Add area code, if new:
             if d["AREA_CODE"] not in py_data["areas"]:
                 py_data["areas"][d["AREA_CODE"]] = {
@@ -231,7 +243,30 @@ def get(config):
         # Staff ids will be under 8 digits and have a leading 0 in the padded version:
         if len(resid) < 8 and padded_id[0] == "0":
             # Check if already added during staff phase:
-            if resid in py_data["persons"]:
+            #if resid in py_data["persons"]:
+            if resid in used_resids:
+                # Need to work out whether the staff member was recorded using
+                # RESID or MAIN_RESID, and use this value to record the new info:
+                phd_staff_resid = None
+                # Easy win if the resis is already a key in the persons data:
+                if resid in py_data["persons"]:
+                    phd_staff_resid = resid
+                # Otherwhise check for a MAIN_RESID alias in the map we created earlier:
+                elif resid in resid_map:
+                    phd_staff_resid = resid_map[resid]
+                # If neither of those worked, something has gone wrong - log and skip:
+                if phd_staff_resid is None:
+                    problems.append({
+                        "ResId": resid,
+                        "studentid": d["STUDENT_ID"],
+                        "forenames": d["FORENAMES"],
+                        "surname": d["SURNAME"],
+                        "email": d["EMAIL"],
+                        "problem": "Staff ResId found, but error matching to staff array. Skipped."
+                    })
+                    continue
+                # If we get here, we don't really have a problem, but we log to the
+                # phd_notes file for info:
                 problems.append({
                     "ResId": resid,
                     "studentid": d["STUDENT_ID"],
@@ -244,7 +279,7 @@ def get(config):
                 # First, flip the start date to Pure format:
                 startdate_obj = datetime.datetime.strptime(d["START_DATE"], "%d/%m/%Y")
                 startdate = startdate_obj.strftime("%Y-%m-%d")
-                py_data["phd_staff"][resid] = {
+                py_data["phd_staff"][phd_staff_resid] = {
                     "email": d["EMAIL"].strip(),
                     "description": d["COURSE_DES"].strip(),
                     "code": d["COURSE_CODE"].strip().upper(),
