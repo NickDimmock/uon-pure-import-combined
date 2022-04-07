@@ -2,6 +2,7 @@
 
 import config
 import csv
+import re
 
 def create():
     login_to_id = {}
@@ -15,7 +16,10 @@ def create():
                 continue
             # Not all entries have a login ID, so check both fields have something:
             if len(row["Staff ID"]) and len(row["Login ID"]):
-                login_to_id[row["Login ID"].lower()] = row["Staff ID"]
+                # All IDs in the phd_staff file are padded to 5 digits, but we only
+                # want the original resid - so remove leading zeroes:
+                resid = re.sub("^0*","",row["Staff ID"])
+                login_to_id[row["Login ID"].lower()] = resid
             else:
                 log.append(f"Skipping {row['Staff ID']} ({row['Forename']} {row['Surname']}) - no login ID value.\n")
 
