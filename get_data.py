@@ -29,7 +29,7 @@ def getTitleClass(title):
 def get(config):
 
     # Read in the staff and org CSV data:
-    with open(config.staff_source, "r", encoding="utf-8") as f:
+    with open(config.staff_source, "r") as f:
         reader = csv.DictReader(f)
         data = list(reader)
 
