@@ -13,12 +13,12 @@ import create_id_lookup
 # Set contract type from HESA_FUNCTION id
 def get_contract_type(id):
     contractTypes = {
-        'NULL': 'Non-academic',
-        '1': 'Academic - teaching and scholarship',
-        '2': 'Academic - research only',
-        '3': 'Academic - teaching and research',
-        '4': 'Non-academic',
-        '9': 'Academic - other'
+        'NULL': 'non_academic',
+        '1': 'academic_teaching_and_scholarship',
+        '2': 'academic_research_only',
+        '3': 'academic_teaching_and_research',
+        '4': 'non_academic',
+        '9': 'academic_other'
     }
     if(id in contractTypes.keys()):
         return contractTypes[id]
