@@ -56,6 +56,7 @@ def create(person_data):
                         "v3:endDate": obj["div_end_date"]
                     },
                     "staffType": "academic",
+                    "contractType": obj["contract_type"],
                     "jobDescription": {
                         "v3:text": obj["role"]
                     },

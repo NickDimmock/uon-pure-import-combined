@@ -10,11 +10,26 @@ import create_id_lookup
 #   * Create the areas and depts lists
 #   * Create the research active staff list
 
+# Set contract type from HESA_FUNCTION id
+def get_contract_type(id):
+    contractTypes = {
+        'NULL': 'Non-academic',
+        '1': 'Academic - teaching and scholarship',
+        '2': 'Academic - research only',
+        '3': 'Academic - teaching and research',
+        '4': 'Non-academic',
+        '9': 'Academic - other'
+    }
+    if(id in contractTypes.keys()):
+        return contractTypes[id]
+    else:
+        return False
+
 # Function to set title classification value.
 # Miss/Mr/Mrs/Ms are 'designation'
 # All other values are assumed to be 'prenominal'
 # (e.g. Dr / Prof / Father)
-def getTitleClass(title):
+def get_title_class(title):
     designationTitles = [
         "Miss",
         "Mr",
@@ -57,6 +72,9 @@ def get(config):
 
     # Keep track of already filtered areas:
     filtered_areas = []
+
+    # Temp array for HESA_FUNCTION values:
+    hesa_function_values = []
 
     # Take the data line by line:
     for d in data:
@@ -129,6 +147,19 @@ def get(config):
             # Pad them back in if necessary:
             hesa_id = d['HESA_ID'].strip().rjust(13, "0")
 
+            # Temp recording of HESA_FUNCTION:
+            if d['HESA_FUNCTION'] not in hesa_function_values:
+                hesa_function_values.append(d['HESA_FUNCTION'])
+
+            # Get value for HESA_FUNCTION ID:
+            if(d['HESA_FUNCTION']):
+                contract_type = get_contract_type(d['HESA_FUNCTION'].strip())
+                if not contract_type:
+                    process = False
+                    notes.write(f"{d['RESID']},{d['EMAIL']},Skipped - unsuported HESA contract type ({d['HESA_FUNCTION']})\n")
+            else:
+                contract_type = ''
+
             # Make sure date of birth is sensible.
             # Pure specifies dd-mm-yyyy,  our data uses dd/mm/yyyy
             # DoB will be blank unless it's included in the CSV data and
@@ -144,7 +175,7 @@ def get(config):
 
             # Establish classification for title:
             title = d["TITLE"].strip()
-            titleClass = getTitleClass(title)
+            titleClass = get_title_class(title)
 
             # FTE in HR data may use many decimal places, here we trim it to two.
             # But it's a string! So we just have to truncate to four characters...
@@ -171,10 +202,15 @@ def get(config):
                 "dept": d["DEPARTMENT_NAME"].strip(),
                 "fte": d["FTE"][0:4],
                 "hesa_id": hesa_id,
+                "contract_type": contract_type,
                 "date_of_birth": date_of_birth,
                 "visibility": config.staff_visibility
             }
     
+    # Temp report on hesa functions:
+    print('HESA_FUNCTION values found:')
+    print(hesa_function_values)
+
     # With staff data in place, we can process students:
     with open(config.phd_source, "r") as f:
         reader = csv.DictReader(f)
@@ -308,7 +344,7 @@ def get(config):
 
         # Establish classification for title:
         title = d["INITCAP(A.TITLE)"].strip()
-        titleClass = getTitleClass(title)
+        titleClass = get_title_class(title)
 
         # Build the person record
         # Stripping all fields just in case, based on previous data.
