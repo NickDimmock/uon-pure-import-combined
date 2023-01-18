@@ -73,9 +73,6 @@ def get(config):
     # Keep track of already filtered areas:
     filtered_areas = []
 
-    # Temp array for HESA_FUNCTION values:
-    hesa_function_values = []
-
     # Take the data line by line:
     for d in data:
 
@@ -110,6 +107,15 @@ def get(config):
         if not d["EMAIL"] or d["EMAIL"].strip() == "":
             process = False
             notes.write(f"{d['RESID']},NONE,Skipped - no email address for {d['FORENAMES']} {d['SURNAME']}\n")
+
+        # Get value for HESA_FUNCTION ID:
+        if(d['HESA_FUNCTION']):
+            contract_type = get_contract_type(d['HESA_FUNCTION'].strip())
+            if not contract_type:
+                contract_type = ''
+                notes.write(f"{d['RESID']},{d['EMAIL']},Unsuported HESA contract type ({d['HESA_FUNCTION']})\n")
+        else:
+            contract_type = ''
 
         if process:
             # Store RESIDs for later reference:
@@ -146,19 +152,6 @@ def get(config):
             # HESA ID should be 13 chars, but data may strip leading zeroes.
             # Pad them back in if necessary:
             hesa_id = d['HESA_ID'].strip().rjust(13, "0")
-
-            # Temp recording of HESA_FUNCTION:
-            if d['HESA_FUNCTION'] not in hesa_function_values:
-                hesa_function_values.append(d['HESA_FUNCTION'])
-
-            # Get value for HESA_FUNCTION ID:
-            if(d['HESA_FUNCTION']):
-                contract_type = get_contract_type(d['HESA_FUNCTION'].strip())
-                if not contract_type:
-                    process = False
-                    notes.write(f"{d['RESID']},{d['EMAIL']},Skipped - unsuported HESA contract type ({d['HESA_FUNCTION']})\n")
-            else:
-                contract_type = ''
 
             # Make sure date of birth is sensible.
             # Pure specifies dd-mm-yyyy,  our data uses dd/mm/yyyy
@@ -206,10 +199,6 @@ def get(config):
                 "date_of_birth": date_of_birth,
                 "visibility": config.staff_visibility
             }
-    
-    # Temp report on hesa functions:
-    print('HESA_FUNCTION values found:')
-    print(hesa_function_values)
 
     # With staff data in place, we can process students:
     with open(config.phd_source, "r") as f:
@@ -245,7 +234,7 @@ def get(config):
             if resid.lower() in login_to_id:
                 # If we can match the non-numeric ID in the PhD lopkup table,
                 # patch in the associated resid for use later.
-                notes.write(f"{resid},{d['EMAIL']},Missing PhD login found and added")
+                notes.write(f"{resid},{d['EMAIL']},Missing PhD login found and added\n")
                 resid = login_to_id[resid.lower()]
             else:
                 # Otherwise, we can't really do much - just log the mismatch and skip this record:
