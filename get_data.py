@@ -10,11 +10,26 @@ import create_id_lookup
 #   * Create the areas and depts lists
 #   * Create the research active staff list
 
+# Set contract type from HESA_FUNCTION id
+def get_contract_type(id):
+    contractTypes = {
+        'NULL': 'non_academic',
+        '1': 'academic_teaching_and_scholarship',
+        '2': 'academic_research_only',
+        '3': 'academic_teaching_and_research',
+        '4': 'non_academic',
+        '9': 'academic_other'
+    }
+    if(id in contractTypes.keys()):
+        return contractTypes[id]
+    else:
+        return False
+
 # Function to set title classification value.
 # Miss/Mr/Mrs/Ms are 'designation'
 # All other values are assumed to be 'prenominal'
 # (e.g. Dr / Prof / Father)
-def getTitleClass(title):
+def get_title_class(title):
     designationTitles = [
         "Miss",
         "Mr",
@@ -93,6 +108,15 @@ def get(config):
             process = False
             notes.write(f"{d['RESID']},NONE,Skipped - no email address for {d['FORENAMES']} {d['SURNAME']}\n")
 
+        # Get value for HESA_FUNCTION ID:
+        if(d['HESA_FUNCTION']):
+            contract_type = get_contract_type(d['HESA_FUNCTION'].strip())
+            if not contract_type:
+                contract_type = ''
+                notes.write(f"{d['RESID']},{d['EMAIL']},Unsuported HESA contract type ({d['HESA_FUNCTION']})\n")
+        else:
+            contract_type = ''
+
         if process:
             # Store RESIDs for later reference:
             used_resids.append(d["RESID"])
@@ -144,7 +168,7 @@ def get(config):
 
             # Establish classification for title:
             title = d["TITLE"].strip()
-            titleClass = getTitleClass(title)
+            titleClass = get_title_class(title)
 
             # FTE in HR data may use many decimal places, here we trim it to two.
             # But it's a string! So we just have to truncate to four characters...
@@ -171,10 +195,11 @@ def get(config):
                 "dept": d["DEPARTMENT_NAME"].strip(),
                 "fte": d["FTE"][0:4],
                 "hesa_id": hesa_id,
+                "contract_type": contract_type,
                 "date_of_birth": date_of_birth,
                 "visibility": config.staff_visibility
             }
-    
+
     # With staff data in place, we can process students:
     with open(config.phd_source, "r") as f:
         reader = csv.DictReader(f)
@@ -209,7 +234,7 @@ def get(config):
             if resid.lower() in login_to_id:
                 # If we can match the non-numeric ID in the PhD lopkup table,
                 # patch in the associated resid for use later.
-                notes.write(f"{resid},{d['EMAIL']},Missing PhD login found and added")
+                notes.write(f"{resid},{d['EMAIL']},Missing PhD login found and added\n")
                 resid = login_to_id[resid.lower()]
             else:
                 # Otherwise, we can't really do much - just log the mismatch and skip this record:
@@ -308,7 +333,7 @@ def get(config):
 
         # Establish classification for title:
         title = d["INITCAP(A.TITLE)"].strip()
-        titleClass = getTitleClass(title)
+        titleClass = get_title_class(title)
 
         # Build the person record
         # Stripping all fields just in case, based on previous data.

@@ -152,5 +152,6 @@ pip-selfcheck.json
 
 # Custom project additions:
 *.bat
+.vscode/
 data/
 out/
