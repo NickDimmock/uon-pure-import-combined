@@ -1,23 +1,30 @@
 import config
 
+
 # Persons
 def create(person_data):
     persons = []
+
     for id, obj in person_data["persons"].items():
+        # Generate ID data in advance to weed out missing HESA IDs
+
+        id_data = [{"@id": id, "@type": "employee", "#text": f"employee-{id}"}]
+        if obj["hesa_id"]:
+            id_data.append(
+                {"@id": obj["hesa_id"], "@type": "hesastaff", "#text": obj["hesa_id"]}
+            )
+
         new_person = {
             "@id": id,
-            "name": {
-                "v3:firstname": obj["first_name"],
-                "v3:lastname": obj["surname"]
-            },
+            "name": {"v3:firstname": obj["first_name"], "v3:lastname": obj["surname"]},
             "names": {
                 "classifiedName": {
                     "@id": f"knownas-{id}",
                     "name": {
                         "v3:firstname": obj["known_as_first"],
-                        "v3:lastname": obj["known_as_last"]
+                        "v3:lastname": obj["known_as_last"],
                     },
-                    "typeClassification": "knownas"
+                    "typeClassification": "knownas",
                 }
             },
             "titles": {
@@ -28,9 +35,9 @@ def create(person_data):
                         "v3:text": {
                             "@lang": "en",
                             "@country": "GB",
-                            "#text": obj["title"]
+                            "#text": obj["title"],
                         }
-                    }
+                    },
                 }
             },
             "gender": "unknown",
@@ -44,43 +51,24 @@ def create(person_data):
                         "v3:classifiedEmail": {
                             "@id": f"{id}-{obj['dept_code']}-{obj['email']}",
                             "v3:classification": "email",
-                            "v3:value": obj['email']
+                            "v3:value": obj["email"],
                         }
                     },
                     "primaryAssociation": "true",
-                    "organisation": {
-                        "v3:source_id": obj["dept_code"]
-                    },
+                    "organisation": {"v3:source_id": obj["dept_code"]},
                     "period": {
                         "v3:startDate": obj["div_start_date"],
-                        "v3:endDate": obj["div_end_date"]
+                        "v3:endDate": obj["div_end_date"],
                     },
                     "staffType": "academic",
                     "contractType": obj["contract_type"],
-                    "jobDescription": {
-                        "v3:text": obj["role"]
-                    },
-                    "fte": obj["fte"]
+                    "jobDescription": {"v3:text": obj["role"]},
+                    "fte": obj["fte"],
                 }
             },
-            "user": {
-                "@id": f"user-{obj['user_id']}"
-            },
-            "personIds": {
-                "v3:id": [
-                    {
-                        "@id": id,
-                        "@type": "employee",
-                        "#text": f"employee-{id}"
-                    },
-                    {
-                        "@id": obj['hesa_id'],
-                        "@type": "hesastaff",
-                        "#text": obj['hesa_id']
-                    }
-                ]
-            },
-            "visibility": f"{obj['visibility']}"
+            "user": {"@id": f"user-{obj['user_id']}"},
+            "personIds": {"v3:id": id_data},
+            "visibility": f"{obj['visibility']}",
         }
         # Now add phd_staff data where required:
         if id in person_data["phd_staff"].keys():
@@ -94,18 +82,13 @@ def create(person_data):
             new_person["organisationAssociations"]["studentOrganisationAssociation"] = {
                 "@id": f"{id}-{phd_org}-{phd_start}",
                 "employmentType": "phd",
-                "organisation": {
-                    "v3:source_id": phd_org
-                },
-                "period": {
-                    "v3:startDate": phd_start,
-                    "v3:endDate": phd_end
-                },
-                "programme": phd_prog
+                "organisation": {"v3:source_id": phd_org},
+                "period": {"v3:startDate": phd_start, "v3:endDate": phd_end},
+                "programme": phd_prog,
             }
             # Notification to identify affected accounts:
             # print(f"{id} is a combined staff & phd account.")
-            
+
         # Add the new person to the list of persons:
         persons.append(new_person)
 
@@ -114,10 +97,7 @@ def create(person_data):
     for id, obj in person_data["phd_persons"].items():
         new_phd = {
             "@id": id,
-            "name": {
-                "v3:firstname": obj["first_name"],
-                "v3:lastname": obj["surname"]
-            },
+            "name": {"v3:firstname": obj["first_name"], "v3:lastname": obj["surname"]},
             "titles": {
                 "title": {
                     "@id": f"title-{id}",
@@ -126,9 +106,9 @@ def create(person_data):
                         "v3:text": {
                             "@lang": "en",
                             "@country": "GB",
-                            "#text": obj["title"]
+                            "#text": obj["title"],
                         }
-                    }
+                    },
                 }
             },
             "gender": "unknown",
@@ -139,25 +119,21 @@ def create(person_data):
                         "v3:classifiedEmail": {
                             "@id": f"{id}-{obj['code']}-{obj['email']}",
                             "v3:classification": "email",
-                            "v3:value": obj["email"]
+                            "v3:value": obj["email"],
                         }
                     },
                     "employmentType": "phd",
                     "primaryAssociation": "true",
-                    "organisation": {
-                        "v3:source_id": phd_org
-                    },
+                    "organisation": {"v3:source_id": phd_org},
                     "period": {
-                        "v3:startDate": obj['startdate'],
-                        "v3:endDate": obj['enddate']
+                        "v3:startDate": obj["startdate"],
+                        "v3:endDate": obj["enddate"],
                     },
-                    "programme": obj['description']
+                    "programme": obj["description"],
                 }
             },
-            "user": {
-                "@id": f"user-{id}"
-            },
-            "visibility": f"{obj['visibility']}"
+            "user": {"@id": f"user-{id}"},
+            "visibility": f"{obj['visibility']}",
         }
         persons.append(new_phd)
 
@@ -165,7 +141,6 @@ def create(person_data):
         "persons": {
             "@xmlns": "v1.unified-person-sync.pure.atira.dk",
             "@xmlns:v3": "v3.commons.pure.atira.dk",
-            "person": persons
+            "person": persons,
         }
     }
-

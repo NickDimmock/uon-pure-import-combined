@@ -10,39 +10,36 @@ import create_id_lookup
 #   * Create the areas and depts lists
 #   * Create the research active staff list
 
+
 # Set contract type from HESA_FUNCTION id
 def get_contract_type(id):
     contractTypes = {
-        'NULL': 'non_academic',
-        '1': 'academic_teaching_and_scholarship',
-        '2': 'academic_research_only',
-        '3': 'academic_teaching_and_research',
-        '4': 'non_academic',
-        '9': 'academic_other'
+        "NULL": "non_academic",
+        "1": "academic_teaching_and_scholarship",
+        "2": "academic_research_only",
+        "3": "academic_teaching_and_research",
+        "4": "non_academic",
+        "9": "academic_other",
     }
-    if(id in contractTypes.keys()):
+    if id in contractTypes.keys():
         return contractTypes[id]
     else:
         return False
+
 
 # Function to set title classification value.
 # Miss/Mr/Mrs/Ms are 'designation'
 # All other values are assumed to be 'prenominal'
 # (e.g. Dr / Prof / Father)
 def get_title_class(title):
-    designationTitles = [
-        "Miss",
-        "Mr",
-        "Mrs",
-        "Ms"
-    ]
+    designationTitles = ["Miss", "Mr", "Mrs", "Ms"]
     if title in designationTitles:
         return "designation"
     else:
         return "prenominal"
 
-def get(config):
 
+def get(config):
     # Read in the staff and org CSV data:
     with open(config.staff_source, "r") as f:
         reader = csv.DictReader(f)
@@ -67,7 +64,7 @@ def get(config):
         "depts": {},
         "persons": {},
         "phd_persons": {},
-        "phd_staff": {}
+        "phd_staff": {},
     }
 
     # Keep track of already filtered areas:
@@ -75,13 +72,14 @@ def get(config):
 
     # Take the data line by line:
     for d in data:
-
         # Flag to determine whether or not to include a staff member:
         process = True
-        
+
         if d["AREA_CODE"] in config.dept_blacklist:
             if d["AREA_CODE"] not in filtered_areas:
-                notes.write(f"{d['RESID']},{d['EMAIL']},Blacklisted area code: {d['AREA_CODE']}\n")
+                notes.write(
+                    f"{d['RESID']},{d['EMAIL']},Blacklisted area code: {d['AREA_CODE']}\n"
+                )
                 filtered_areas.append(d["AREA_CODE"])
             process = False
 
@@ -98,24 +96,30 @@ def get(config):
                 notes.write(f"{d['RESID']},{d['EMAIL']},Duplicate main position\n")
 
         # No visiting profs etc.:
-        if d["POSITION"].startswith("Visiting") or d["DEPARTMENT_NAME"].startswith("Visting"):
+        if d["POSITION"].startswith("Visiting") or d["DEPARTMENT_NAME"].startswith(
+            "Visting"
+        ):
             process = False
             notes.write(f"{d['RESID']},{d['EMAIL']},Skipped - visiting role\n")
-        
+
         # Email is required
         # In past, we've had single-space 'empty' email data, so also check for that.
         if not d["EMAIL"] or d["EMAIL"].strip() == "":
             process = False
-            notes.write(f"{d['RESID']},NONE,Skipped - no email address for {d['FORENAMES']} {d['SURNAME']}\n")
+            notes.write(
+                f"{d['RESID']},NONE,Skipped - no email address for {d['FORENAMES']} {d['SURNAME']}\n"
+            )
 
         # Get value for HESA_FUNCTION ID:
-        if(d['HESA_FUNCTION']):
-            contract_type = get_contract_type(d['HESA_FUNCTION'].strip())
+        if d["HESA_FUNCTION"]:
+            contract_type = get_contract_type(d["HESA_FUNCTION"].strip())
             if not contract_type:
-                contract_type = ''
-                notes.write(f"{d['RESID']},{d['EMAIL']},Unsuported HESA contract type ({d['HESA_FUNCTION']})\n")
+                contract_type = ""
+                notes.write(
+                    f"{d['RESID']},{d['EMAIL']},Unsuported HESA contract type ({d['HESA_FUNCTION']})\n"
+                )
         else:
-            contract_type = ''
+            contract_type = ""
 
         if process:
             # Store RESIDs for later reference:
@@ -131,27 +135,38 @@ def get(config):
                     "name": d["AREA_NAME"],
                     "parent": config.uon_id,
                     "type": "faculty",
-                    "start_date": config.start_date
+                    "start_date": config.start_date,
                 }
-            
+
             # Add dept, if new:
             if d["DEPARTMENT"] not in py_data["depts"]:
                 py_data["depts"][d["DEPARTMENT"]] = {
                     "name": d["DEPARTMENT_NAME"],
                     "parent": d["AREA_CODE"],
                     "type": "department",
-                    "start_date": config.start_date
+                    "start_date": config.start_date,
                 }
-            
-            # Convert date, using first ten chars (omit time):
-            uni_start_date = convert_date.convert(d['START_DATE'][0:10], config.start_date)
-            uni_end_date = convert_date.convert(d['END_DATE'][0:10], config.start_date)
-            div_start_date = convert_date.convert(d['POSITION_DATE_FROM'][0:10], config.start_date)
-            div_end_date = convert_date.convert(d['POSITION_DATE_TO'][0:10], config.start_date)
 
-            # HESA ID should be 13 chars, but data may strip leading zeroes.
-            # Pad them back in if necessary:
-            hesa_id = d['HESA_ID'].strip().rjust(13, "0")
+            # Convert date, using first ten chars (omit time):
+            uni_start_date = convert_date.convert(
+                d["START_DATE"][0:10], config.start_date
+            )
+            uni_end_date = convert_date.convert(d["END_DATE"][0:10], config.start_date)
+            div_start_date = convert_date.convert(
+                d["POSITION_DATE_FROM"][0:10], config.start_date
+            )
+            div_end_date = convert_date.convert(
+                d["POSITION_DATE_TO"][0:10], config.start_date
+            )
+
+            # Staff without HESA IDs will just have a single zero.
+            # We want to avoid these.
+            # Real HESA ID should be 13 chars, but data may strip leading zeroes,
+            # so we need to pad them back to 13 if necessary.
+            if d["HESA_ID"] == "0":
+                hesa_id = False
+            else:
+                hesa_id = d["HESA_ID"].strip().rjust(13, "0")
 
             # Make sure date of birth is sensible.
             # Pure specifies dd-mm-yyyy,  our data uses dd/mm/yyyy
@@ -160,9 +175,11 @@ def get(config):
             date_of_birth = ""
             if len(d["DATE_OF_BIRTH"]):
                 if re.match("^\d{2}/\d{2}/\d{4}", d["DATE_OF_BIRTH"]):
-                    date_of_birth = d["DATE_OF_BIRTH"].replace("/","-")
+                    date_of_birth = d["DATE_OF_BIRTH"].replace("/", "-")
                 else:
-                    notes.write(f"{d['RESID']},{d['EMAIL']},DoB format mismatch: {d['DATE_OF_BIRTH']}\n")
+                    notes.write(
+                        f"{d['RESID']},{d['EMAIL']},DoB format mismatch: {d['DATE_OF_BIRTH']}\n"
+                    )
                 if date_of_birth[0:10] == "01/01/1900":
                     notes.write(f"{d['RESID']},{d['EMAIL']},Default DoB value\n")
 
@@ -197,14 +214,14 @@ def get(config):
                 "hesa_id": hesa_id,
                 "contract_type": contract_type,
                 "date_of_birth": date_of_birth,
-                "visibility": config.staff_visibility
+                "visibility": config.staff_visibility,
             }
 
     # With staff data in place, we can process students:
     with open(config.phd_source, "r") as f:
         reader = csv.DictReader(f)
         # Skip headers:
-        #next(reader, None)
+        # next(reader, None)
         phd_data = list(reader)
 
     # A list of our various complaints:
@@ -224,10 +241,10 @@ def get(config):
     for d in phd_data:
         # Grab resid and remove leading zeros:
         resid = d["RESID"].strip()
-        resid = re.sub(r"^0*","",resid)
+        resid = re.sub(r"^0*", "", resid)
 
         # Course decriptions arrive in quotes - remove these:
-        d["COURSE_DES"] = re.sub(r"^\"(.*)\"$",r"\1",d["COURSE_DES"])
+        d["COURSE_DES"] = re.sub(r"^\"(.*)\"$", r"\1", d["COURSE_DES"])
 
         # Catch non-numeric IDs:
         if not resid.isdigit():
@@ -238,37 +255,42 @@ def get(config):
                 resid = login_to_id[resid.lower()]
             else:
                 # Otherwise, we can't really do much - just log the mismatch and skip this record:
-                problems.append({
+                problems.append(
+                    {
                         "ResId": resid,
                         "studentid": d["STUDENT_ID"],
                         "forenames": d["FORENAMES"],
                         "surname": d["SURNAME"],
                         "email": d["EMAIL"],
-                        "problem": "Unusable name-based resid - excluded."
-                    })
+                        "problem": "Unusable name-based resid - excluded.",
+                    }
+                )
                 continue
 
         # Catch records with no start date included and use a temporary date:
-        
+
         if not d["START_DATE"]:
-           problems.append({
-                "ResId": resid,
-                "studentid": d["STUDENT_ID"],
-                "forenames": d["FORENAMES"],
-                "surname": d["SURNAME"],
-                "email": d["EMAIL"],
-                "problem": "No start date provided - used " + phd_default_start_date
-           })
-           # Add new date to data:
-           d["START_DATE"] = phd_default_start_date
-        
+            problems.append(
+                {
+                    "ResId": resid,
+                    "studentid": d["STUDENT_ID"],
+                    "forenames": d["FORENAMES"],
+                    "surname": d["SURNAME"],
+                    "email": d["EMAIL"],
+                    "problem": "No start date provided - used "
+                    + phd_default_start_date,
+                }
+            )
+            # Add new date to data:
+            d["START_DATE"] = phd_default_start_date
+
         # Pad out the resid to 8 digits (for PhDs with staff IDs):
         padded_id = resid.rjust(8, "0")
 
         # Staff ids will be under 8 digits and have a leading 0 in the padded version:
         if len(resid) < 8 and padded_id[0] == "0":
             # Check if already added during staff phase:
-            #if resid in py_data["persons"]:
+            # if resid in py_data["persons"]:
             if resid in used_resids:
                 # Need to work out whether the staff member was recorded using
                 # RESID or MAIN_RESID, and use this value to record the new info:
@@ -281,25 +303,29 @@ def get(config):
                     phd_staff_resid = resid_map[resid]
                 # If neither of those worked, something has gone wrong - log and skip:
                 if phd_staff_resid is None:
-                    problems.append({
+                    problems.append(
+                        {
+                            "ResId": resid,
+                            "studentid": d["STUDENT_ID"],
+                            "forenames": d["FORENAMES"],
+                            "surname": d["SURNAME"],
+                            "email": d["EMAIL"],
+                            "problem": "Staff ResId found, but error matching to staff array. Skipped.",
+                        }
+                    )
+                    continue
+                # If we get here, we don't really have a problem, but we log to the
+                # phd_notes file for info:
+                problems.append(
+                    {
                         "ResId": resid,
                         "studentid": d["STUDENT_ID"],
                         "forenames": d["FORENAMES"],
                         "surname": d["SURNAME"],
                         "email": d["EMAIL"],
-                        "problem": "Staff ResId found, but error matching to staff array. Skipped."
-                    })
-                    continue
-                # If we get here, we don't really have a problem, but we log to the
-                # phd_notes file for info:
-                problems.append({
-                    "ResId": resid,
-                    "studentid": d["STUDENT_ID"],
-                    "forenames": d["FORENAMES"],
-                    "surname": d["SURNAME"],
-                    "email": d["EMAIL"],
-                    "problem": "Staff ResId found - adding PhD details to existing staff record."
-                })
+                        "problem": "Staff ResId found - adding PhD details to existing staff record.",
+                    }
+                )
                 # Add the PhD data we need to phd_staff list:
                 # First, flip the start date to Pure format:
                 startdate_obj = datetime.datetime.strptime(d["START_DATE"], "%d/%m/%Y")
@@ -309,7 +335,7 @@ def get(config):
                     "description": d["COURSE_DES"].strip(),
                     "code": d["COURSE_CODE"].strip().upper(),
                     "startdate": startdate,
-                    "enddate": phd_default_end_date
+                    "enddate": phd_default_end_date,
                 }
                 # Skip to next record:
                 continue
@@ -317,14 +343,16 @@ def get(config):
             # If not already added as staff, it's OK to add as PhD.
             else:
                 # We'll still log:
-                problems.append({
-                    "ResId": resid,
-                    "studentid": d["STUDENT_ID"],
-                    "forenames": d["FORENAMES"],
-                    "surname": d["SURNAME"],
-                    "email": d["EMAIL"],
-                    "problem": "Staff ResId, but not found in staff import data. Included, but may need checking."
-                })
+                problems.append(
+                    {
+                        "ResId": resid,
+                        "studentid": d["STUDENT_ID"],
+                        "forenames": d["FORENAMES"],
+                        "surname": d["SURNAME"],
+                        "email": d["EMAIL"],
+                        "problem": "Staff ResId, but not found in staff import data. Included, but may need checking.",
+                    }
+                )
 
         # If we get this far, we've probably got a student.
         # Flip the start date to Pure format:
@@ -347,13 +375,17 @@ def get(config):
             "code": d["COURSE_CODE"].strip().upper(),
             "startdate": startdate,
             "enddate": phd_default_end_date,
-            "visibility": config.phd_visibility
+            "visibility": config.phd_visibility,
         }
 
         # CSV export of problems:
-        with open(f"{config.output_folder}/{config.phd_problem_file}", 'w', newline='') as csvfile:
+        with open(
+            f"{config.output_folder}/{config.phd_problem_file}", "w", newline=""
+        ) as csvfile:
             fieldnames = problems[0].keys()
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, quoting=csv.QUOTE_ALL)
+            writer = csv.DictWriter(
+                csvfile, fieldnames=fieldnames, quoting=csv.QUOTE_ALL
+            )
             writer.writeheader()
             for row in problems:
                 writer.writerow(row)
