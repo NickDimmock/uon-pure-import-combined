@@ -277,7 +277,7 @@ def get(config):
             else:
                 # Otherwise, we can't really do much - just log the mismatch and skip this record:
                 logging.warning(
-                    "%s,%s,Skipped - Unusable name-based resid", resid, d["EMAIL"]
+                    "%s,%s,Skipped - unusable name-based resid", resid, d["EMAIL"]
                 )
                 continue
 
@@ -344,7 +344,7 @@ def get(config):
             else:
                 # We'll still log:
                 logging.warning(
-                    "%s,%s,Staff resid for PhD not found in staff data - may need checking",
+                    "%s,%s,PhD matched to staff resid but not found in staff data - may need checking",
                     resid,
                     d["EMAIL"],
                 )
