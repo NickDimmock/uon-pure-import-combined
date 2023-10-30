@@ -1,7 +1,9 @@
 import os
 import json
-import config
+import logging
 import xmltodict
+import sys
+import config
 import get_data
 import build_csv
 import create_org_data
@@ -12,9 +14,17 @@ import create_user_data
 try:
     # Create target Directory
     os.mkdir(config.output_folder)
-    print(f"Output folder ({config.output_folder}) created.") 
+    print(f"Output folder ({config.output_folder}) created.")
 except FileExistsError:
     print(f"Output folder ({config.output_folder}) already exists.")
+
+# Start logging:
+logging.basicConfig(
+    filename=f"{config.output_folder}/notes.csv",
+    format="%(levelname)s,%(message)s",
+    filemode="w",
+    level=logging.INFO,
+)
 
 # Add headers to raw CSV;
 build_csv.build(config)
@@ -29,12 +39,16 @@ with open(f"{config.output_folder}/{config.org_xml}", "w", newline="") as orgfil
 
 # Create person data:
 person_data = create_person_data.create(py_data)
-with open(f"{config.output_folder}/{config.persons_xml}", "w", newline="", encoding="utf-8") as orgfile:
+with open(
+    f"{config.output_folder}/{config.persons_xml}", "w", newline="", encoding="utf-8"
+) as orgfile:
     orgfile.write(xmltodict.unparse(person_data, pretty=True))
 
 # Create user data:
 user_data = create_user_data.create(py_data)
-with open(f"{config.output_folder}/{config.users_xml}", "w", newline="", encoding="utf-8") as orgfile:
+with open(
+    f"{config.output_folder}/{config.users_xml}", "w", newline="", encoding="utf-8"
+) as orgfile:
     orgfile.write(xmltodict.unparse(user_data, pretty=True))
 
 # Write the main data structure to disk, for reference

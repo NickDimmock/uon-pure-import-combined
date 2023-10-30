@@ -1,6 +1,7 @@
 import csv
 import re
 import datetime
+import logging
 import convert_date
 import create_id_lookup
 
@@ -45,9 +46,6 @@ def get(config):
         reader = csv.DictReader(f)
         data = list(reader)
 
-    # Note logging:
-    notes = open(f"{config.output_folder}/{config.data_notes_file}", "w")
-
     # Create our staff login to employee ID lookup table:
     login_to_id = create_id_lookup.create()
 
@@ -77,8 +75,11 @@ def get(config):
 
         if d["AREA_CODE"] in config.dept_blacklist:
             if d["AREA_CODE"] not in filtered_areas:
-                notes.write(
-                    f"{d['RESID']},{d['EMAIL']},Blacklisted area code: {d['AREA_CODE']}\n"
+                logging.info(
+                    "%s,%s,Skipped - blacklisted area code (%s)",
+                    d["RESID"],
+                    d["EMAIL"],
+                    d["AREA_CODE"],
                 )
                 filtered_areas.append(d["AREA_CODE"])
             process = False
@@ -89,25 +90,32 @@ def get(config):
             # the "Main position" value is other than 0:
             if d["MAIN_POSITION"] == "0":
                 process = False
-                notes.write(f"{d['RESID']},{d['EMAIL']},Skipped - not main position\n")
+                logging.info(
+                    "%s,%s,Skipped - not main position", d["RESID"], d["EMAIL"]
+                )
             # Otherwise we have duplicate main positions and are overwriting the
             # previous one. This may fix default date of birth rows - proceed, but log it:
             else:
-                notes.write(f"{d['RESID']},{d['EMAIL']},Duplicate main position\n")
+                logging.info(
+                    "%s,%s,Skipped - duplicate main position", d["RESID"], d["EMAIL"]
+                )
 
         # No visiting profs etc.:
         if d["POSITION"].startswith("Visiting") or d["DEPARTMENT_NAME"].startswith(
             "Visting"
         ):
             process = False
-            notes.write(f"{d['RESID']},{d['EMAIL']},Skipped - visiting role\n")
+            logging.info("%s,%s,Skipped - visiting role", d["RESID"], d["EMAIL"])
 
         # Email is required
         # In past, we've had single-space 'empty' email data, so also check for that.
         if not d["EMAIL"] or d["EMAIL"].strip() == "":
             process = False
-            notes.write(
-                f"{d['RESID']},NONE,Skipped - no email address for {d['FORENAMES']} {d['SURNAME']}\n"
+            logging.warning(
+                "%s,N/A,Skipped - no email address for %s %s",
+                d["RESID"],
+                d["FORENAMES"],
+                d["SURNAME"],
             )
 
         # Get value for HESA_FUNCTION ID:
@@ -115,8 +123,11 @@ def get(config):
             contract_type = get_contract_type(d["HESA_FUNCTION"].strip())
             if not contract_type:
                 contract_type = ""
-                notes.write(
-                    f"{d['RESID']},{d['EMAIL']},Unsuported HESA contract type ({d['HESA_FUNCTION']})\n"
+                logging.warning(
+                    "%s,%s,Unsupported HESA contract type (%s)",
+                    d["RESID"],
+                    d["EMAIL"],
+                    d["HESA_FUNCTION"],
                 )
         else:
             contract_type = ""
@@ -177,11 +188,18 @@ def get(config):
                 if re.match("^\d{2}/\d{2}/\d{4}", d["DATE_OF_BIRTH"]):
                     date_of_birth = d["DATE_OF_BIRTH"].replace("/", "-")
                 else:
-                    notes.write(
-                        f"{d['RESID']},{d['EMAIL']},DoB format mismatch: {d['DATE_OF_BIRTH']}\n"
+                    logging.WARNING(
+                        "%s,%s,Date of birth formatting error (%s)",
+                        d["RESID"],
+                        d["EMAIL"],
+                        d["DATE_OF_BIRTH"],
                     )
                 if date_of_birth[0:10] == "01/01/1900":
-                    notes.write(f"{d['RESID']},{d['EMAIL']},Default DoB value\n")
+                    logging.warning(
+                        "%s,%s,Record uses default date of birth (01/01/1900)",
+                        d["RESID"],
+                        d["EMAIL"],
+                    )
 
             # Establish classification for title:
             title = d["TITLE"].strip()
@@ -251,35 +269,26 @@ def get(config):
             if resid.lower() in login_to_id:
                 # If we can match the non-numeric ID in the PhD lopkup table,
                 # patch in the associated resid for use later.
-                notes.write(f"{resid},{d['EMAIL']},Missing PhD login found and added\n")
                 resid = login_to_id[resid.lower()]
+                logging.info(
+                    "%s,%s,Missing PhD login found and added", resid, d["EMAIL"]
+                )
+
             else:
                 # Otherwise, we can't really do much - just log the mismatch and skip this record:
-                problems.append(
-                    {
-                        "ResId": resid,
-                        "studentid": d["STUDENT_ID"],
-                        "forenames": d["FORENAMES"],
-                        "surname": d["SURNAME"],
-                        "email": d["EMAIL"],
-                        "problem": "Unusable name-based resid - excluded.",
-                    }
+                logging.warning(
+                    "%s,%s,Skipped - Unusable name-based resid", resid, d["EMAIL"]
                 )
                 continue
 
         # Catch records with no start date included and use a temporary date:
 
         if not d["START_DATE"]:
-            problems.append(
-                {
-                    "ResId": resid,
-                    "studentid": d["STUDENT_ID"],
-                    "forenames": d["FORENAMES"],
-                    "surname": d["SURNAME"],
-                    "email": d["EMAIL"],
-                    "problem": "No start date provided - used "
-                    + phd_default_start_date,
-                }
+            logging.info(
+                "%s,%s,No PhD start date provided - used %s",
+                resid,
+                d["EMAIL"],
+                phd_default_start_date,
             )
             # Add new date to data:
             d["START_DATE"] = phd_default_start_date
@@ -303,28 +312,19 @@ def get(config):
                     phd_staff_resid = resid_map[resid]
                 # If neither of those worked, something has gone wrong - log and skip:
                 if phd_staff_resid is None:
-                    problems.append(
-                        {
-                            "ResId": resid,
-                            "studentid": d["STUDENT_ID"],
-                            "forenames": d["FORENAMES"],
-                            "surname": d["SURNAME"],
-                            "email": d["EMAIL"],
-                            "problem": "Staff ResId found, but error matching to staff array. Skipped.",
-                        }
+                    logging.warning(
+                        "%s,%s,Skipped - staff resid found for PhD, but error matching to staff data",
+                        resid,
+                        d["EMAIL"],
                     )
                     continue
-                # If we get here, we don't really have a problem, but we log to the
-                # phd_notes file for info:
-                problems.append(
-                    {
-                        "ResId": resid,
-                        "studentid": d["STUDENT_ID"],
-                        "forenames": d["FORENAMES"],
-                        "surname": d["SURNAME"],
-                        "email": d["EMAIL"],
-                        "problem": "Staff ResId found - adding PhD details to existing staff record.",
-                    }
+
+                # If we get here, we don't really have a problem, but we log the
+                # fact we've matched a PhD record to a staff ID:
+                logging.info(
+                    "%s,%s,Staff resid found - adding PhD details to staff record",
+                    resid,
+                    d["EMAIL"],
                 )
                 # Add the PhD data we need to phd_staff list:
                 # First, flip the start date to Pure format:
@@ -343,15 +343,10 @@ def get(config):
             # If not already added as staff, it's OK to add as PhD.
             else:
                 # We'll still log:
-                problems.append(
-                    {
-                        "ResId": resid,
-                        "studentid": d["STUDENT_ID"],
-                        "forenames": d["FORENAMES"],
-                        "surname": d["SURNAME"],
-                        "email": d["EMAIL"],
-                        "problem": "Staff ResId, but not found in staff import data. Included, but may need checking.",
-                    }
+                logging.warning(
+                    "%s,%s,Staff resid for PhD not found in staff data - may need checking",
+                    resid,
+                    d["EMAIL"],
                 )
 
         # If we get this far, we've probably got a student.
@@ -377,19 +372,5 @@ def get(config):
             "enddate": phd_default_end_date,
             "visibility": config.phd_visibility,
         }
-
-        # CSV export of problems:
-        with open(
-            f"{config.output_folder}/{config.phd_problem_file}", "w", newline=""
-        ) as csvfile:
-            fieldnames = problems[0].keys()
-            writer = csv.DictWriter(
-                csvfile, fieldnames=fieldnames, quoting=csv.QUOTE_ALL
-            )
-            writer.writeheader()
-            for row in problems:
-                writer.writerow(row)
-
-    notes.close()
 
     return py_data
