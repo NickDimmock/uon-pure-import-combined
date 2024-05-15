@@ -5,6 +5,8 @@ import logging
 import convert_date
 import create_id_lookup
 
+# TODO check if log sources exist before logging
+
 # This script will:
 #   * Create the initial py_data object
 #   * Populate it with default values from the config file
@@ -188,7 +190,7 @@ def get(config):
                 if re.match("^\d{2}/\d{2}/\d{4}", d["DATE_OF_BIRTH"]):
                     date_of_birth = d["DATE_OF_BIRTH"].replace("/", "-")
                 else:
-                    logging.WARNING(
+                    logging.warning(
                         "%s,%s,Date of birth formatting error (%s)",
                         d["RESID"],
                         d["EMAIL"],
@@ -304,7 +306,7 @@ def get(config):
                 # Need to work out whether the staff member was recorded using
                 # RESID or MAIN_RESID, and use this value to record the new info:
                 phd_staff_resid = None
-                # Easy win if the resis is already a key in the persons data:
+                # Easy win if the resid is already a key in the persons data:
                 if resid in py_data["persons"]:
                     phd_staff_resid = resid
                 # Otherwhise check for a MAIN_RESID alias in the map we created earlier:
