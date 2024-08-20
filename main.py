@@ -4,7 +4,8 @@ import logging
 import xmltodict
 import sys
 import config
-import get_data
+#import get_data
+import get_data_sits as get_data
 import build_csv
 import create_org_data
 import create_person_data

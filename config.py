@@ -1,7 +1,8 @@
 # source files for staff and phd data:
 staff_raw_source = "data/puredatahesa.csv"
 staff_source = "data/data.csv" # Built at runtime from staff_raw_source
-phd_source = "data/phd-data.csv"
+#phd_source = "data/phd-data.csv"
+phd_source = "data/sits-data-20240820.csv"
 phd_staff_source = "data/phd-staff.tsv"
 
 # master output folder:

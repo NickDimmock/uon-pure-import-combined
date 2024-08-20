@@ -18,8 +18,15 @@ def create():
             if len(row["Staff ID"]) and len(row["Login ID"]):
                 # All IDs in the phd_staff file are padded to 5 digits, but we only
                 # want the original resid - so remove leading zeroes:
-                resid = re.sub("^0*","",row["Staff ID"])
+                #resid = re.sub("^0*","",row["Staff ID"])
+                # UPDATE FOR SITS DATA - the SITS file provides the staff resud as padded,
+                # and phd-staff.tsv is not padded, so we need to pad the phd-staff.tsv value
+                # at this point in order for it to match the SITS value.
+                resid = row["Staff ID"].rjust(8,"0")
                 login_to_id[row["Login ID"].lower()] = resid
+                if(resid == "00019687"):
+                    print("JP!")
+                    print(resid)
             else:
                 log.append(f"Skipping {row['Staff ID']} ({row['Forename']} {row['Surname']}) - no login ID value.\n")
 
