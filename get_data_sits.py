@@ -4,7 +4,7 @@ import json
 import datetime
 import logging
 import convert_date
-import create_id_lookup
+#import create_id_lookup
 import config
 
 # TODO check if log sources exist before logging
@@ -14,7 +14,6 @@ import config
 #   * Populate it with default values from the config file
 #   * Create the areas and depts lists
 #   * Create the research active staff list
-
 
 # Set contract type from HESA_FUNCTION id
 def get_contract_type(id):
@@ -31,7 +30,6 @@ def get_contract_type(id):
     else:
         return False
 
-
 # Function to set title classification value.
 # Miss/Mr/Mrs/Ms are 'designation'
 # All other values are assumed to be 'prenominal'
@@ -43,7 +41,6 @@ def get_title_class(title):
     else:
         return "prenominal"
 
-
 def get(config):
     # Read in the staff and org CSV data:
     with open(config.staff_source, "r") as f:
@@ -51,7 +48,8 @@ def get(config):
         data = list(reader)
 
     # Create our staff login to employee ID lookup table:
-    login_to_id = create_id_lookup.create()
+    # (No longer required with SITS data)
+    # login_to_id = create_id_lookup.create()
 
     # Array to caputre RESID and MAIN_RESID values - used during PhD stage
     # to link staff / student accounts:
@@ -247,9 +245,6 @@ def get(config):
         # next(reader, None)
         phd_data = list(reader)
 
-    # A list of our various complaints:
-    problems = []
-
     # Set temporary start date for PhDs to 1 Jan this year.
     # We need to create this as dd/mm/yyyy, as it will be updated to the
     # expected Pure format later, along with all other start dates.
@@ -263,85 +258,53 @@ def get(config):
 
     for d in phd_data:
         # Grab resid and remove leading zeros:
-        resid = d["RESID"].strip()
-        resid = re.sub(r"^0*", "", resid)
-
-        # Course decriptions arrive in quotes - remove these:
-        # SITS title is CourseName, unquoted so not necessary.
-        # d["COURSE_DES"] = re.sub(r"^\"(.*)\"$", r"\1", d["COURSE_DES"])
-
-        # Catch non-numeric IDs:
-        # TODO: these will now be in the StaffId column, so need to check that
-        # rather than resid.
-
+        resid = d["RESID"].strip().lstrip("0")
+        
+        # Caputre and sanitise the new staff ID data:
         staff_id = str(d["StaffID"]).strip().lower().lstrip("0")
-        if(staff_id == "00019687"):
-            print("JP in get!")
-
-        # First, are RESID and StaffID both empty? If so, we can't do anything:
+        
+        # First, are RESID and StaffID both empty? If so, perfect - we can't do anything:
         if resid == "" and staff_id == "":
             logging.warning(
-                "%s,%s,Skipped - no RESID or StaffID value", '', f"{d['StudentId']} - {d['Email']}"
+                "%s,%s,PhD: Skipped - no RESID or StaffID value [NOPHD]", '', f"{d['StudentId']} - {d['Email']}"
             )
             continue
 
-        # First batch of SITS data contains invalid RESIDs of more than 8 digits:
+        # First batch of SITS data contains invalid RESIDs of more than 8 digits.
+        # Still checking for this, but hopefully no longer necessary:
         if len(resid) > 8:
             logging.warning(
-                "%s,%s,Skipped - RESID longer than 8 characters", '', f"{resid} - {d['Email']}"
+                "%s,%s,PhD: Skipped - RESID longer than 8 characters [NOPHD]", '', f"{resid} - {d['Email']}"
             )
+        
         # If we get here, we must have at least a RESID or StaffID, maybe both
         
-        # TODO: New to SITS data
-        # If we have no resid but we do have a staffid, we can make the staffid the resid
-        # No need to look up the info using phd-staff.tsv any more
+        # If the RESID is name-based, we need to check for a usable StaffID value.
+        if re.search('[a-zA-Z]', resid):
+            if staff_id:
+                logging.info(
+                    "%s,%s,PhD: Missing PhD login found and added", resid, d["Email"]
+                )
+                resid = staff_id
+            else:
+                logging.warning(
+                    "%s,%s,PhD: Skipped - unusable name-based resid / no usable staff ID [NOPHD]", resid, d["Email"]
+                )
+                continue
+
+        # If we have no resid but we do have a staff id, we can simply make the staff id the resid:
         if resid == "":
             resid = staff_id.lstrip("0")
 
-        # TODO: Need to consider cases with a resid and a staffid that are different...
-        # Neill Friedman:
-        #   SITS has 99909424 and 00026395
-        #   Not in PureDataHesa
-        #   Therefore 000 not needed, use 999
-        #   Check against staff data - already in place?
-
-        # If we only have a StaffID, we need to look up the staff resid
-
-        # If there's a StaffId value, we look it up in login_to_id
-        # If it's found, we use the staff RESID instead
-        # If it's not found and there's no RESID in the SITS data, we can't
-        # create a record.
-        # If it's not found and there IS a RESID in the SITS data, we use that
-        '''
-        elif resid == "":
-            if staff_id in login_to_id:
-                # If we can match the non-numeric ID in the PhD lopkup table,
-                # patch in the associated resid for use later.
-                resid = login_to_id[staff_id]
-                logging.info(
-                    "%s,%s,Missing PhD login found and added", resid, d["Email"]
-                )
-
-            else:
-                # Otherwise, we can't really do much - just log the mismatch and skip this record:
-                logging.warning(
-                    "%s,%s,Skipped - unusable name-based resid / no match in phd-staff.tsv", resid, d["Email"]
-                )
-                continue
-        '''
-
-        # Catch records with no start date included and use a temporary date:
-        # TODO: There is no startdate info in the current SITS data.
-
+        # Catch records with no start date included and use the default date:
         if not d["StartDate"]:
             logging.info(
-                "%s,%s,No PhD start date provided - used %s",
+                "%s,%s,PhD: No PhD start date provided - used %s",
                 resid,
                 d["Email"],
                 phd_default_start_date,
             )
             # Add new date to data:
-            #d["StartDate"] = phd_default_start_date
             phd_start_date = phd_default_start_date
         else:
             phd_start_date = convert_date.convert(
@@ -349,82 +312,67 @@ def get(config):
             )
 
         # Pad out the resid to 8 digits (for PhDs with staff IDs):
-        # TODO: needs to be checked with full data set.
         padded_id = resid.rjust(8, "0")
 
-        # Trim leading zeros from resid to check against staff data:
-        trimmed_resid = resid.lstrip("0")
-
-        # Staff ids will be under 8 digits and have a leading 0 in the padded version:
-        # TODO: needs check with full data, no current examples.
-        # TODO: will also need to factor in new StaffId column.
-        #if len(resid) < 8 and padded_id[0] == "0":
-        if True:
-            # Check if already added during staff phase:
-            # if resid in py_data["persons"]:
-            if resid in used_resids:
-                # Need to work out whether the staff member was recorded using
-                # RESID or MAIN_RESID, and use this value to record the new info:
-                phd_staff_resid = None
-                # Easy win if the resid is already a key in the persons data:
-                if resid in py_data["persons"]:
-                    phd_staff_resid = resid
-                    logging.info (
-                        "%s,%s,PhD RESID matched to existing staff record",
-                        resid,
-                        d["Email"],
-                    )
-                # Otherwhise check for a MAIN_RESID alias in the map we created earlier:
-                elif resid in resid_map:
-                    phd_staff_resid = resid_map[resid]
-                    logging.info (
-                        "%s,%s,PhD RESID matched to MAIN_RESID alias for existing staff record",
-                        resid,
-                        d["Email"],
-                    )
-                # If neither of those worked, something has gone wrong - log and skip:
-                if phd_staff_resid is None:
-                    logging.warning(
-                        "%s,%s,Skipped - staff resid found for PhD but error matching to staff data",
-                        resid,
-                        d["Email"],
-                    )
-                    continue
-
-                # If we get here, we don't really have a problem, but we log the
-                # fact we've matched a PhD record to a staff ID:
-                logging.info(
-                    "%s,%s,Staff resid found - adding PhD details to staff record",
+        # Check if staff_id is in used RESIDs
+        # May happen if we have numeric data for both resid and staff id
+        # Wil usually be the same ID in both cases, but not always:
+        if staff_id in used_resids:
+            logging.info (
+                    f"%s,%s,PhD: staff_id ({staff_id}) found in existing staff record",
                     resid,
                     d["Email"],
                 )
-                # Add the PhD data we need to phd_staff list:
-                # First, flip the start date to Pure format:
-                # TODO: Can't do this as SITS file doesn't currently include start date
-                # Temporarily forcing use of default start date
-                # startdate = phd_default_start_date
-                #startdate_obj = datetime.datetime.strptime(d["START_DATE"], "%d/%m/%Y")
-                #startdate = startdate_obj.strftime("%Y-%m-%d")
-                py_data["phd_staff"][phd_staff_resid] = {
-                    "email": d["Email"].strip(),
-                    "description": d["CourseName"].strip(),
-                    "code": d["Course"].strip().upper(),
-                    "startdate": phd_start_date,
-                    "enddate": phd_default_end_date,
-                }
-                # Skip to next record:
+            # Easiest fix is to copy staff_id to resid so that it's picked up in the next step:
+            resid = staff_id
+        # Check if already added during staff phase:
+        if resid in used_resids:
+            # Need to work out whether the staff member was recorded using
+            # RESID or MAIN_RESID, and use this value to record the new info:
+            phd_staff_resid = None
+            # Easy win if the resid is already a key in the persons data:
+            if resid in py_data["persons"]:
+                phd_staff_resid = resid
+                logging.info (
+                    "%s,%s,PhD: RESID matched to existing staff record",
+                    resid,
+                    d["Email"],
+                )
+            # Otherwhise check for a MAIN_RESID alias in the map we created earlier:
+            elif resid in resid_map:
+                phd_staff_resid = resid_map[resid]
+                logging.info (
+                    "%s,%s,PhD: RESID matched to MAIN_RESID alias for existing staff record",
+                    resid,
+                    d["Email"],
+                )
+            # If neither of those worked, something has gone wrong - log and skip:
+            if phd_staff_resid is None:
+                logging.warning(
+                    "%s,%s,PhD: Skipped - staff resid found for PhD but error matching to staff data [NOPHD]",
+                    resid,
+                    d["Email"],
+                )
                 continue
 
-            # If not already added as staff, it's OK to add as PhD.
-            # else:
-                # We'll still log:
-                # SITS: No need to log - this just means they didn't match a staff ID,
-                # so are presumably only a student.
-                # logging.warning(
-                #     "%s,%s,PhD matched to staff resid but not found in staff data - may need checking",
-                #     resid,
-                #     d["Email"],
-                # )
+            # If we get here, we don't really have a problem, but we log the
+            # fact we've matched a PhD record to a staff ID:
+            logging.info(
+                "%s,%s,PhD: Staff resid found - adding PhD details to staff record",
+                resid,
+                d["Email"],
+            )
+            
+            # Add the PhD data we need to phd_staff list:
+            py_data["phd_staff"][phd_staff_resid] = {
+                "email": d["Email"].strip(),
+                "description": d["CourseName"].strip(),
+                "code": d["Course"].strip().upper(),
+                "startdate": phd_start_date,
+                "enddate": phd_default_end_date,
+            }
+            # Skip to next record:
+            continue
 
         # If we get this far, we've probably got a student.
         # Flip the start date to Pure format:
@@ -437,8 +385,6 @@ def get(config):
 
         # Build the person record
         # Stripping all fields just in case, based on previous data.
-        # TODO: Course is now all caps and has different content
-        # TODO: - need to check final data for examples.
         py_data["phd_persons"][padded_id] = {
             "title": title,
             "title_class": titleClass,

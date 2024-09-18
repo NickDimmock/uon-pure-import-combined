@@ -18,7 +18,7 @@ with open("out/master_data.json") as json_file:
         sits_phd_keys.append(item)
 
     
-with open("out/backups/pre-sits/master_data.json") as json_file:
+with open("out/backups/backup-sits-20240806/master_data.json") as json_file:
     json_data = json.load(json_file)
     print(
         f"Pre-SITS PhD Staff: {len(json_data['phd_staff'])}"

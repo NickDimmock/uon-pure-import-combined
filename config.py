@@ -1,9 +1,9 @@
 # source files for staff and phd data:
 staff_raw_source = "data/puredatahesa.csv"
 staff_source = "data/data.csv" # Built at runtime from staff_raw_source
-#phd_source = "data/phd-data.csv"
-phd_source = "data/sits-data-20240820.csv"
-phd_staff_source = "data/phd-staff.tsv"
+phd_source = "data/phd-sits-data.csv"
+# Following not required with SITS data
+# phd_staff_source = "data/phd-staff.tsv"
 
 # master output folder:
 output_folder = "out"
@@ -12,15 +12,6 @@ output_folder = "out"
 persons_xml = "persons.xml"
 users_xml = "users.xml"
 org_xml = "org.xml"
-
-# Filename for PhD problems CSV:
-phd_problem_file = "phd_notes.csv"
-
-# Notes from data import:
-data_notes_file = "data_notes.csv"
-
-# ID lookup log:
-id_lookup_log = "id_lookup_log.txt"
 
 # Reference master data file:
 master_json = "master_data.json"
