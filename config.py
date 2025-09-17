@@ -60,7 +60,9 @@ dept_blacklist = {
     "LLS",
     "LTE",
     "FHS",
-    "FEH"
+    "FEH",
+    "FAS",
+    "FHE"
 }
 
 # Default visibility for staff / PhD profiles
