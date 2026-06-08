@@ -4,6 +4,7 @@ import json
 import datetime
 import logging
 import convert_date
+import sys
 #import create_id_lookup
 import config
 
@@ -46,6 +47,10 @@ def get(config):
     with open(config.staff_source, "r") as f:
         reader = csv.DictReader(f)
         data = list(reader)
+        # Check for empty file sometimes caused by copying errors:
+        if len(data) == 0:
+            print("Error with staff data source - no records found.")
+            sys.exit()
 
     # Create our staff login to employee ID lookup table:
     # (No longer required with SITS data)
@@ -188,7 +193,7 @@ def get(config):
             # matches the format dd/mm/yyyy.
             date_of_birth = ""
             if len(d["DATE_OF_BIRTH"]):
-                if re.match("^\d{2}/\d{2}/\d{4}", d["DATE_OF_BIRTH"]):
+                if re.match(r"^\d{2}/\d{2}/\d{4}", d["DATE_OF_BIRTH"]):
                     date_of_birth = d["DATE_OF_BIRTH"].replace("/", "-")
                 else:
                     logging.warning(
