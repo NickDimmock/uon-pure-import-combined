@@ -91,8 +91,16 @@ def get(config):
                 filtered_areas.append(d["AREA_CODE"])
             process = False
 
+        # Skip visiting profs / fellows etc.
+        # If we just check POSITION we can avoid blocking emeritus staff, who
+        # also classify as visiting in DEPARTMENT_NAME:
+        if d["POSITION"].startswith("Visiting"):
+                process = False
+                logging.info("%s,%s,Skipped - visiting role", d["RESID"], d["EMAIL"])
+
         # Identify duplicate staff entries:
         if d["RESID"] in py_data["persons"]:
+
             # If we have a duplicate staff entry, only process the data if
             # the "Main position" value is other than 0:
             if d["MAIN_POSITION"] == "0":
@@ -106,13 +114,6 @@ def get(config):
                 logging.info(
                     "%s,%s,Skipped - duplicate main position", d["RESID"], d["EMAIL"]
                 )
-
-        # No visiting profs etc.:
-        if d["POSITION"].startswith("Visiting") or d["DEPARTMENT_NAME"].startswith(
-            "Visiting"
-        ):
-            process = False
-            logging.info("%s,%s,Skipped - visiting role", d["RESID"], d["EMAIL"])
 
         # Email is required
         # In past, we've had single-space 'empty' email data, so also check for that.
