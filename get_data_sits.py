@@ -109,7 +109,7 @@ def get(config):
 
         # No visiting profs etc.:
         if d["POSITION"].startswith("Visiting") or d["DEPARTMENT_NAME"].startswith(
-            "Visting"
+            "Visiting"
         ):
             process = False
             logging.info("%s,%s,Skipped - visiting role", d["RESID"], d["EMAIL"])
