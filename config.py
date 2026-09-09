@@ -62,7 +62,10 @@ dept_blacklist = {
     "FHS",
     "FEH",
     "FAS",
-    "FHE"
+    "FHE",
+    "FHB",
+    "FEA",
+    "FBL"
 }
 
 # Default visibility for staff / PhD profiles
